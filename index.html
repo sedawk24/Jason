@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous City Simulator</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/panel.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="cityView">
+      <canvas id="cityCanvas"></canvas>
+      <div id="hud"><span id="fps">-- fps</span></div>
+    </div>
+    <div id="panel">
+      <div class="panel-placeholder">
+        <strong>Autonomous City Simulator</strong>
+        <span>Drag to pan &middot; scroll to zoom. Controls come online in later phases.</span>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

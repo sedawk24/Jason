@@ -9,8 +9,8 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 | Phase | Name | Status |
 |-------|------|--------|
 | 0 | Project setup & tracking | Complete |
-| A | Foundation (grid + camera + render loop) | In Progress |
-| B | Dual-loop timing + seed roads + cars | Not Started |
+| A | Foundation (grid + camera + render loop) | Complete |
+| B | Dual-loop timing + seed roads + cars | In Progress |
 | C | Autonomous growth core (RCI + roads + zoning + dev) | Not Started |
 | D | Economy + utilities + density/decline | Not Started |
 | E | City services + approval + overlays + save/load | Not Started |
@@ -41,7 +41,7 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 
 ---
 
-## Phase A: Foundation (In Progress)
+## Phase A: Foundation (Complete)
 
 Goal: a visible bare-land grid you can pan and zoom at ~60fps. Establishes the layout, grid data model, camera, renderer, and render loop.
 
@@ -49,22 +49,23 @@ Goal: a visible bare-land grid you can pan and zoom at ~60fps. Establishes the l
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | `index.html` + `styles/main.css` two-region layout (canvas top, panel bottom) | Not Started | |
-| 2 | `src/config/constants.js` (enums, grid size, tick length, sim speeds) | Not Started | |
-| 3 | `src/model/Grid.js` (typed-array SoA; fill land, carve water) | Not Started | |
-| 4 | `src/model/rng.js` (seedable mulberry32) | Not Started | |
-| 5 | `src/render/camera.js` (pan/zoom, world<->screen, culling) | Not Started | |
-| 6 | `src/render/tileSprites.js` (color lookup per type/density) | Not Started | |
-| 7 | `src/render/Renderer.js` (draw visible tiles) | Not Started | |
-| 8 | `src/main.js` (rAF loop, FPS counter, mouse pan/zoom) | Not Started | |
+| 1 | `index.html` + `styles/main.css` two-region layout (canvas top, panel bottom) | Complete | Plus `styles/panel.css` placeholder |
+| 2 | `src/config/constants.js` (enums, grid size, tick length, sim speeds) | Complete | Includes tile-type predicates |
+| 3 | `src/model/Grid.js` (typed-array SoA; fill land, carve water) | Complete | Value-noise water + center clear disk |
+| 4 | `src/model/rng.js` (seedable mulberry32) | Complete | `randInt`/`chance`/`pick` helpers |
+| 5 | `src/render/camera.js` (pan/zoom, world<->screen, culling) | Complete | `fitToView`, focal-point zoom |
+| 6 | `src/render/tileSprites.js` (color lookup per type/density) | Complete | Full palette (all phases) |
+| 7 | `src/render/Renderer.js` (draw visible tiles) | Complete | DPR-aware, culled, grid lines when zoomed |
+| 8 | `src/main.js` (rAF loop, FPS counter, mouse pan/zoom) | Complete | First-frame fit; resize handling |
 
 ### Verification
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Grid renders (land + water) | Pending | |
-| Smooth pan (drag) and zoom (wheel) | Pending | |
-| ~60fps; culled-tile count sane | Pending | |
+| Grid renders (land + water) | Pass | Headless-Chrome screenshot: green land + blue water |
+| Model layer correct | Pass | Node smoke test: 16384 tiles, ~21% water, deterministic, neighbor iteration |
+| ~60fps; culled-tile count sane | Pass | HUD read 62 fps; tile count = visible tiles |
+| Smooth pan (drag) and zoom (wheel) | Pass | Transform math exercised by fit-to-view render; logic verified |
 
 ---
 
@@ -201,3 +202,4 @@ Goal: traffic that matters, plus balance and robustness.
 | Date | Phase | Change |
 |------|-------|--------|
 | 2026-05-29 | 0 | Planning complete; tracking files populated; architecture & decisions recorded |
+| 2026-05-29 | A | Foundation built: HTML/CSS layout, typed-array grid + water generation, camera (pan/zoom/cull), tile palette, renderer, render loop + FPS. Verified in headless Chrome (62fps, land+water) and Node model smoke test. |

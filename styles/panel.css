@@ -1,0 +1,14 @@
+/* Control panel styling. Expanded in later phases (sliders, stat bars, time controls). */
+
+.panel-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  color: #8a929c;
+  font-size: 14px;
+}
+.panel-placeholder strong {
+  color: #e6e8ea;
+  font-size: 15px;
+}

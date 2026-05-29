@@ -1,0 +1,56 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #14171c;
+  color: #e6e8ea;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Top: the city view fills all space above the panel */
+#cityView {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0; /* allow the flex child to shrink so the canvas can size correctly */
+  background: #0e1116;
+}
+
+#cityCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+#cityCanvas:active { cursor: grabbing; }
+
+/* Heads-up display overlay (FPS, later: date/speed) */
+#hud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font: 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #cfd6de;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Bottom: control panel */
+#panel {
+  flex: 0 0 220px;
+  background: #1c2128;
+  border-top: 1px solid #2c333d;
+  overflow: hidden;
+}
