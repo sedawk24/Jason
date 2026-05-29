@@ -81,3 +81,22 @@ A running log of significant architectural decisions made during this project. E
 **Alternatives considered:**
 - Organic stub roads (slime-mold style): rejected -- too many roads, sprawl-like, hard to keep land reachable.
 - Explicit road-segment/graph planner: rejected for v1 -- more complex than needed; the grid rule gives good results simply.
+
+## 2026-05-29 -- Capacity-based utilities (not spatial connectivity)
+
+**Decision:** Power and water are modeled as citywide capacity vs. draw, scaled by the utilities budget. Each building draws by density; plants/towers supply capacity; buildings are flagged powered/watered up to available capacity, and the engine auto-builds a plant/tower (cooldown- and treasury-gated) when there is a deficit.
+
+**Reasoning:** The road grid is essentially fully connected, so a spatial flood-fill from plants would power almost everything regardless of plant location -- adding cost without gameplay value. A capacity model makes the meaningful decisions (build enough supply, fund it) crisp, drives the auto-build loop, and creates real decline when under-funded. Verified in simulation (auto-build keeps up with growth; cutting the utilities budget to 0 collapses capacity and population declines).
+
+**Alternatives considered:**
+- Spatial BFS connectivity from plants along roads: deferred to backlog -- nicer "power reaches outward" visual, but trivial on a connected grid and more expensive.
+- Per-building power lines the engine must route: rejected -- too fiddly for an autonomous sim.
+
+## 2026-05-29 -- Utilities gate occupied buildings, not empty zones
+
+**Decision:** In development, power/water (and their absence causing decline/abandonment) apply only to *occupied* buildings (density >= 1) and to the density step-up. An empty zoned tile (density 0) is never abandoned merely for lacking power.
+
+**Reasoning:** The pipeline updates utilities before zoning, so a tile zoned this tick has no powered flag yet. Gating empty zones on power caused every newly-zoned tile to be abandoned the same tick, collapsing the city to roads-only. Restricting the power requirement to occupied buildings (which are flagged by the next tick, since density-0 tiles draw zero) fixes this while still making real buildings decline when utilities fail.
+
+**Alternatives considered:**
+- Reordering the pipeline (zoning before utilities): workable but couples ordering to this quirk and complicates the Phase E services insertion point.

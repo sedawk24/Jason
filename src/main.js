@@ -6,6 +6,7 @@ import { TimeControls } from './ui/TimeControls.js';
 import { tick as simTick } from './sim/simulate.js';
 import { computeStats } from './sim/stats.js';
 import { StatBars } from './ui/StatBars.js';
+import { ControlPanel } from './ui/ControlPanel.js';
 import { SIM_SPEEDS, MAX_TICKS_PER_FRAME, TILE_SIZE } from './config/constants.js';
 
 // --- Construct the world ---
@@ -30,23 +31,35 @@ const timeControls = new TimeControls(document.getElementById('time-section'), {
   initial: 'normal',
 });
 const statBars = new StatBars(document.getElementById('panel-stats'));
+new ControlPanel(document.getElementById('panel-controls'), city);
 
 // --- Input: drag to pan, wheel to zoom ---
 let dragging = false, lastX = 0, lastY = 0;
+let userMovedCamera = false;
 canvas.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
 window.addEventListener('mouseup', () => { dragging = false; });
 window.addEventListener('mousemove', (e) => {
   if (!dragging) return;
   camera.panByScreen(e.clientX - lastX, e.clientY - lastY);
   lastX = e.clientX; lastY = e.clientY;
+  userMovedCamera = true;
 });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   const rect = canvas.getBoundingClientRect();
   const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
   camera.zoomAt(e.clientX - rect.left, e.clientY - rect.top, factor);
+  userMovedCamera = true;
 }, { passive: false });
-window.addEventListener('resize', () => renderer.resize());
+// Keep the canvas sized to its container. Until the user moves the camera, fit
+// the whole map in view on every layout change (handles initial layout settling
+// and window resizes). A ?cam= override counts as a user move.
+if (applyCamParam()) userMovedCamera = true;
+const resizeObserver = new ResizeObserver(() => {
+  renderer.resize();
+  if (!userMovedCamera && renderer.cssW > 0) camera.fitToView();
+});
+resizeObserver.observe(canvas);
 
 // Optional camera positioning for screenshots/debugging: ?cam=tileX,tileY,zoom
 function applyCamParam() {
@@ -69,19 +82,8 @@ let lastTime = performance.now();
 let acc = 0; // accumulated fractional ticks
 let frames = 0, fpsLast = lastTime;
 let lastPanel = 0;
-let didInitialFit = false;
 
 function frame(now) {
-  // Once layout has produced a real canvas size, fit the camera to the map
-  // (or honor a ?cam= override).
-  if (!didInitialFit) {
-    renderer.resize();
-    if (renderer.cssW > 0) {
-      if (!applyCamParam()) camera.fitToView();
-      didInitialFit = true;
-    }
-  }
-
   const dt = Math.min(now - lastTime, 250) / 1000; // clamp tab-switch gaps
   lastTime = now;
 

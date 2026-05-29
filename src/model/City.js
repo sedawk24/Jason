@@ -16,7 +16,7 @@ export class City {
     // Policy parameters the player controls (the only thing the UI writes).
     this.params = {
       taxR: 0.09, taxC: 0.09, taxI: 0.09,
-      budgetRoads: 1, budgetPower: 1,
+      budgetRoads: 1, budgetUtil: 1,
       budgetPolice: 1, budgetFire: 1, budgetEdu: 1,
     };
 
@@ -39,9 +39,11 @@ export class City {
       industrialOutput: 0, goodsConsumed: 0,
     };
 
-    // Engine bookkeeping (rebuilt from the grid on load; not the save's truth).
+    // Engine bookkeeping.
     this.roadFrontier = new Set();
     this.roadGraphDirty = true;
+    this.lastPowerBuild = -999; // tick of last auto-built power plant (cooldown)
+    this.lastWaterBuild = -999; // tick of last auto-built water tower (cooldown)
   }
 
   static createNew(seed = 12345) {

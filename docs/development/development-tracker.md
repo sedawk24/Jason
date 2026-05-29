@@ -12,8 +12,8 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 | A | Foundation (grid + camera + render loop) | Complete |
 | B | Dual-loop timing + seed roads + cars | Complete |
 | C | Autonomous growth core (RCI + roads + zoning + dev) | Complete |
-| D | Economy + utilities + density/decline | In Progress |
-| E | City services + approval + overlays + save/load | Not Started |
+| D | Economy + utilities + density/decline | Complete |
+| E | City services + approval + overlays + save/load | In Progress |
 | F | Traffic congestion + tuning hardening | Not Started |
 
 ---
@@ -126,7 +126,7 @@ Goal: the city builds itself -- roads grow, zones fill, low-density buildings de
 
 ---
 
-## Phase D: Economy + utilities + density/decline (Not Started)
+## Phase D: Economy + utilities + density/decline (Complete)
 
 Goal: real consequences -- treasury, taxes, auto-built power/water, medium/high density, and decline.
 
@@ -134,20 +134,23 @@ Goal: real consequences -- treasury, taxes, auto-built power/water, medium/high 
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | `src/sim/economy.js` (income, expenses, treasury, bankruptcy) | Not Started | |
-| 2 | `src/sim/landvalue.js` (road access up, industry adjacency down) | Not Started | |
-| 3 | `src/sim/utilities.js` (connectivity BFS + auto-build on deficit) | Not Started | |
-| 4 | Extend `development.js` to med/high density + decline/abandonment | Not Started | |
-| 5 | Tax + budget sliders (`src/ui/ControlPanel.js`, `Slider.js`) | Not Started | |
-| 6 | Treasury + power/water readouts (`src/ui/StatBars.js`) | Not Started | |
+| 1 | `src/sim/economy.js` (income, expenses, treasury, bankruptcy) | Complete | Tax income; maintenance scaled by budgets; history |
+| 2 | `src/sim/landvalue.js` (center premium, roads/commerce up, industry down) | Complete | Blurred source field + static center premium |
+| 3 | `src/sim/utilities.js` (capacity model + auto-build on deficit) | Complete | Cooldown + treasury gate; powers up to capacity |
+| 4 | Extend `development.js` to med/high density + decline/abandonment | Complete | Land-value density caps; utilities gate occupied |
+| 5 | Tax + budget sliders (`src/ui/ControlPanel.js`, `Slider.js`) | Complete | R/C/I tax + roads/utilities budgets |
+| 6 | Treasury + power/water readouts (`src/ui/StatBars.js`) | Complete | Treasury, net/week, power & water gauges |
+| 7 | Two-column panel layout; robust camera fit (ResizeObserver) | Complete | Fixed early-layout fit bug |
 
 ### Verification
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Treasury tracks taxes/budgets; plant auto-appears on deficit | Pending | |
-| Downtown reaches high density; outskirts stay low | Pending | |
-| Over-taxing / zero power budget causes visible decline | Pending | |
+| Treasury tracks taxes/budgets; utilities auto-build on deficit | Pass | Node sim: 5 plants/5 towers auto-built; income/expense tracked |
+| Downtown reaches high density; outskirts stay low | Pass | Node sim: density pyramid L5000/M3144/H37; land value 187 center vs 95 outer |
+| Under-funding utilities causes visible decline | Pass | Node sim: budgetUtil=0 -> pop 28k -> 8.9k |
+| Zero taxes drain the treasury (bankruptcy possible) | Pass | Node sim: treasury falls and goes negative |
+| Policy UI + economic readouts render | Pass | Headless screenshot: sliders + treasury/power/water gauges |
 
 ---
 
@@ -209,3 +212,4 @@ Goal: traffic that matters, plus balance and robustness.
 | 2026-05-29 | A | Foundation built: HTML/CSS layout, typed-array grid + water generation, camera (pan/zoom/cull), tile palette, renderer, render loop + FPS. Verified in headless Chrome (62fps, land+water) and Node model smoke test. |
 | 2026-05-29 | B | Dual-loop timing (rAF render + tick accumulator), City save-state model + seed settlement, time/speed controls + date, A* pathfinding + LRU cache, pooled car system with real-time interpolation, car rendering. Verified via Node functional test (pathfinding, motion, pause) and headless screenshot (60fps, 12 cars). |
 | 2026-05-29 | C | Autonomous growth core: RCI demand model (feedback + tax suppression + EMA), grid-aligned road extension, demand-weighted zoning (clustering + R/I separation), low-density development with hysteresis, stats, RCI bars + population readout. Retuned from organic to grid roads for believable blocks. Verified via Node sim (gradual growth, tax response, determinism) and headless screenshots (24.9k-pop grid city, 60+fps). |
+| 2026-05-29 | D | Economy (tax income, maintenance, treasury, bankruptcy), land-value field (center premium + sources, blurred), capacity-based power/water with auto-build, med/high density gated by land value, decline + abandonment, policy UI (tax + budget sliders), economic readouts (treasury/net/power/water). Fixed same-tick-abandon bug (utilities gate occupied only) and camera fit-on-layout bug (ResizeObserver). Verified via Node sim (density pyramid, decline, bankruptcy, auto-build) and headless screenshots. |

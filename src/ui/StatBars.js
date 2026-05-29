@@ -1,5 +1,6 @@
-// Live stat readouts: population, jobs, and the RCI demand bars (diverging from
-// center, -1..+1). Reads city.stats and city.demand; never mutates the model.
+// Live readouts: population, jobs, unemployment, treasury + net flow, power and
+// water supply/demand, and the diverging RCI demand bars. Reads city.stats,
+// city.economy, and city.demand; never mutates the model.
 export class StatBars {
   constructor(container) {
     const root = document.createElement('div');
@@ -8,6 +9,10 @@ export class StatBars {
     this.popEl = makeStat(root, 'Population');
     this.jobsEl = makeStat(root, 'Jobs');
     this.unempEl = makeStat(root, 'Unemployment');
+    this.treasuryEl = makeStat(root, 'Treasury');
+    this.flowEl = makeStat(root, 'Net / week');
+    this.powerEl = makeStat(root, 'Power');
+    this.waterEl = makeStat(root, 'Water');
 
     const rci = document.createElement('div');
     rci.className = 'rci';
@@ -24,9 +29,21 @@ export class StatBars {
   }
 
   update(city) {
-    this.popEl.textContent = fmt(city.stats.population);
-    this.jobsEl.textContent = fmt(city.stats.jobsC + city.stats.jobsI);
-    this.unempEl.textContent = (city.stats.unemployment * 100).toFixed(0) + '%';
+    const s = city.stats, e = city.economy;
+    this.popEl.textContent = fmt(s.population);
+    this.jobsEl.textContent = fmt(s.jobsC + s.jobsI);
+    this.unempEl.textContent = (s.unemployment * 100).toFixed(0) + '%';
+
+    this.treasuryEl.textContent = money(e.treasury);
+    this.treasuryEl.classList.toggle('negative', e.treasury < 0);
+
+    const net = e.lastIncome - e.lastExpenses;
+    this.flowEl.textContent = (net >= 0 ? '+' : '−') + money(Math.abs(net));
+    this.flowEl.classList.toggle('negative', net < 0);
+
+    setUtil(this.powerEl, s.powerDraw, s.powerCap);
+    setUtil(this.waterEl, s.waterDraw, s.waterCap);
+
     setDiverging(this.rFill, city.demand.R);
     setDiverging(this.cFill, city.demand.C);
     setDiverging(this.iFill, city.demand.I);
@@ -65,6 +82,11 @@ function makeRciRow(root, label, cls) {
   return fill;
 }
 
+function setUtil(el, draw, cap) {
+  el.textContent = fmt(draw) + ' / ' + fmt(cap);
+  el.classList.toggle('negative', draw > cap);
+}
+
 function setDiverging(fill, v) {
   v = Math.max(-1, Math.min(1, v));
   if (v >= 0) {
@@ -78,4 +100,12 @@ function setDiverging(fill, v) {
 
 function fmt(n) {
   return Math.round(n).toLocaleString();
+}
+
+function money(v) {
+  const a = Math.abs(v);
+  const sign = v < 0 ? '−' : '';
+  if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(1) + 'M';
+  if (a >= 1e4) return sign + '$' + (a / 1e3).toFixed(0) + 'k';
+  return sign + '$' + Math.round(a).toLocaleString();
 }

@@ -49,7 +49,7 @@ html, body {
 
 /* Bottom: control panel */
 #panel {
-  flex: 0 0 220px;
+  flex: 0 0 270px;
   background: #1c2128;
   border-top: 1px solid #2c333d;
   overflow: hidden;

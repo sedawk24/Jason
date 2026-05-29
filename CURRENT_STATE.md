@@ -1,6 +1,6 @@
 # Current State
 
-**Status: Phase C complete (the city builds itself). Beginning Phase D (economy, utilities, density, decline).**
+**Status: Phase D complete (economy, utilities, density, decline). Beginning Phase E (services, approval, overlays, save/load).**
 
 This is an autonomous browser-based city simulator. See `README.md` for what it is and how to run it, and `CLAUDE.md` for architecture and conventions.
 
@@ -9,18 +9,18 @@ This is an autonomous browser-based city simulator. See `README.md` for what it 
 ## What Is Complete
 
 - **Phase 0 -- Project setup & tracking.**
-- **Phase A -- Foundation.** Layout, typed-array grid + water gen, camera (pan/zoom/cull), renderer, render loop.
-- **Phase B -- Dual-loop timing + seed roads + cars.** City save-state model + seed settlement; dual loop (60fps render + speed-controllable tick cadence, tab-switch safe); time/speed controls + date; A* pathfinding + LRU cache; pooled, real-time-interpolated cars.
-- **Phase C -- Autonomous growth core.** The city now builds itself from the seed: an RCI demand model (job/worker/population feedback loops, tax suppression, EMA smoothing) drives grid-aligned road extension, demand-weighted zoning (with district clustering and residential/industrial separation), and low-density building development with hysteresis. Stats (population, jobs, unemployment) and RCI demand bars + readouts are live. Verified via Node simulation (gradual, stable, tax-responsive, deterministic growth) and headless screenshots (believable ~25k-pop grid city at 60+fps; ~29% road share). Debug aids: `?ticks=N` fast-forward and `?cam=x,y,zoom`.
+- **Phase A -- Foundation.** Layout, typed-array grid + water gen, camera (pan/zoom/cull + robust fit), renderer, render loop.
+- **Phase B -- Dual-loop timing + seed roads + cars.** City model + seed; dual loop; time/speed + date; A* pathfinding; pooled real-time cars.
+- **Phase C -- Autonomous growth core.** RCI demand (feedback + tax suppression), grid-aligned roads, demand-weighted zoning, low-density development; stats + RCI/population readouts. The city builds itself.
+- **Phase D -- Economy + utilities + density/decline.** Treasury (tax income, maintenance, bankruptcy); a land-value field (downtown center premium, road/commerce boosts, industry nuisance) that caps building density so high-rises form downtown and low density on the outskirts; capacity-based power & water that the engine auto-builds on deficit (cooldown- and treasury-gated); medium/high density and decline/abandonment when buildings lose utilities, access, or demand; a policy UI (R/C/I tax sliders, roads/utilities budget sliders) and economic readouts (treasury, net/week, power & water supply/demand). Verified via Node simulations (density pyramid, downtown land-value gradient, auto-build, decline on under-funding, bankruptcy on zero tax) and headless screenshots.
 
 ## What Is In Progress
 
-- **Phase D -- Economy + utilities + density/decline.** Adding the treasury/economy (tax income, maintenance expenses, bankruptcy effects); a land-value field (road access up, industry adjacency down) feeding development; autonomous power & water (connectivity flood-fill + auto-build on deficit, on a cooldown and gated by treasury); medium/high density (land-value-capped) and decline/abandonment when under-served; and the policy UI (tax + budget sliders, treasury and power/water readouts).
+- **Phase E -- City services + approval + overlays + save/load.** Adding police/fire/education as auto-built service buildings that radiate coverage (scaled by funding sliders) and affect land value, growth, and approval; a city-approval model and gauge; data overlays (land value / power / service coverage) toggled in the UI; and save/load/new-city persistence to `localStorage`. Plus a first full balance pass.
 
 ## What Is Next
 
-- **Phase E -- City services + approval + overlays + save/load:** police/fire/education, approval gauge, data overlays, persistence.
-- **Phase F -- Traffic congestion + tuning hardening:** congestion effects, balance, robustness.
+- **Phase F -- Traffic congestion + tuning hardening:** congestion effects on routing and land value, stress tests, robustness, final balance.
 
 ## Key References
 
