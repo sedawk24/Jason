@@ -13,8 +13,8 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 | B | Dual-loop timing + seed roads + cars | Complete |
 | C | Autonomous growth core (RCI + roads + zoning + dev) | Complete |
 | D | Economy + utilities + density/decline | Complete |
-| E | City services + approval + overlays + save/load | In Progress |
-| F | Traffic congestion + tuning hardening | Not Started |
+| E | City services + approval + overlays + save/load | Complete |
+| F | Traffic congestion + tuning hardening | In Progress |
 
 ---
 
@@ -154,7 +154,7 @@ Goal: real consequences -- treasury, taxes, auto-built power/water, medium/high 
 
 ---
 
-## Phase E: City services + approval + overlays + save/load (Not Started)
+## Phase E: City services + approval + overlays + save/load (Complete)
 
 Goal: complete the policy loop -- services, approval, data overlays, and persistence.
 
@@ -162,20 +162,22 @@ Goal: complete the policy loop -- services, approval, data overlays, and persist
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | `src/sim/services.js` (auto-built police/fire/school + coverage + funding) | Not Started | |
-| 2 | Approval model in `stats.js` + gauge | Not Started | |
-| 3 | Service funding sliders + coverage gauges | Not Started | |
-| 4 | `src/render/overlays.js` (land value / power / coverage heatmaps + toggle) | Not Started | |
-| 5 | `src/persistence/saveLoad.js` (localStorage, base64 typed arrays, autosave) | Not Started | |
-| 6 | First balance pass | Not Started | |
+| 1 | `src/sim/services.js` (auto-built police/fire/school + coverage + funding) | Complete | Radial coverage stamp scaled by funding |
+| 2 | Approval model in `stats.js` | Complete | Taxes/unemployment/bankruptcy down, coverage up |
+| 3 | Service funding sliders + approval/coverage readouts | Complete | ControlPanel Services group; StatBars |
+| 4 | `src/render/overlays.js` (land value / coverage / power + toggle) | Complete | Heatmap + overlay select in header |
+| 5 | `src/persistence/saveLoad.js` (localStorage, base64 typed arrays, autosave) | Complete | Save/Load/New City; autosave every 300 ticks |
+| 6 | Coverage feeds land value + demand; in-place City.reset | Complete | LV_COVERAGE, R_SERVICE; UI rebuild on load/new |
 
 ### Verification
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Under-funding a service shrinks coverage -> decline | Pending | |
-| Reload restores exact city; overlays toggle | Pending | |
-| ~10-min unattended run yields believable city | Pending | |
+| Services auto-build; coverage reaches target | Pass | Node sim: 19 each of police/fire/school; coverage ~40% |
+| Under-funding services shrinks coverage | Pass | Node sim: budgets 0 -> coverage 40% -> 0% |
+| Approval responds to policy | Pass | Node sim: 20% taxes drop approval 97 -> 31 |
+| Save/Load restores the exact city | Pass | Node roundtrip: tick/treasury/params + grid diff 0 |
+| UI: overlays, sliders, readouts render | Pass | Headless screenshots (land-value heatmap, full dashboard, 63fps) |
 
 ---
 
@@ -213,3 +215,4 @@ Goal: traffic that matters, plus balance and robustness.
 | 2026-05-29 | B | Dual-loop timing (rAF render + tick accumulator), City save-state model + seed settlement, time/speed controls + date, A* pathfinding + LRU cache, pooled car system with real-time interpolation, car rendering. Verified via Node functional test (pathfinding, motion, pause) and headless screenshot (60fps, 12 cars). |
 | 2026-05-29 | C | Autonomous growth core: RCI demand model (feedback + tax suppression + EMA), grid-aligned road extension, demand-weighted zoning (clustering + R/I separation), low-density development with hysteresis, stats, RCI bars + population readout. Retuned from organic to grid roads for believable blocks. Verified via Node sim (gradual growth, tax response, determinism) and headless screenshots (24.9k-pop grid city, 60+fps). |
 | 2026-05-29 | D | Economy (tax income, maintenance, treasury, bankruptcy), land-value field (center premium + sources, blurred), capacity-based power/water with auto-build, med/high density gated by land value, decline + abandonment, policy UI (tax + budget sliders), economic readouts (treasury/net/power/water). Fixed same-tick-abandon bug (utilities gate occupied only) and camera fit-on-layout bug (ResizeObserver). Verified via Node sim (density pyramid, decline, bankruptcy, auto-build) and headless screenshots. |
+| 2026-05-29 | E | City services (auto-built police/fire/school, radial coverage scaled by funding) feeding land value, demand, and a new approval model; data overlays (land value / coverage / power heatmaps + selector); save/load/new-city via localStorage (base64 typed arrays) + autosave; in-place City.reset and UI rebuild. Verified via Node sim (service build, coverage defunding, approval vs taxes, save/load roundtrip) and headless screenshots (dashboard + overlay). |

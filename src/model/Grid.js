@@ -21,6 +21,19 @@ export class Grid {
     this.traffic = new Uint8Array(n);    // 0..255 congestion
   }
 
+  // Zero every layer (used when regenerating or loading a city in place).
+  clear() {
+    this.type.fill(0);
+    this.density.fill(0);
+    this.devLevel.fill(0);
+    this.landValue.fill(0);
+    this.population.fill(0);
+    this.jobs.fill(0);
+    this.flags.fill(0);
+    this.coverage.fill(0);
+    this.traffic.fill(0);
+  }
+
   idx(x, y) { return y * this.width + x; }
   xOf(i) { return i % this.width; }
   yOf(i) { return (i / this.width) | 0; }

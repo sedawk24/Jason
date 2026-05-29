@@ -1,5 +1,6 @@
 import { diffuseLandValue } from './landvalue.js';
 import { updateUtilities } from './utilities.js';
+import { updateServices } from './services.js';
 import { updateDemand } from './demand.js';
 import { extendRoads } from './roads.js';
 import { updateZoning } from './zoning.js';
@@ -19,6 +20,7 @@ export function tick(city) {
   city.tick++;
   diffuseLandValue(city);
   updateUtilities(city);
+  updateServices(city);
   updateDemand(city);
   extendRoads(city);
   updateZoning(city);

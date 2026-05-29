@@ -7,6 +7,7 @@ import { tick as simTick } from './sim/simulate.js';
 import { computeStats } from './sim/stats.js';
 import { StatBars } from './ui/StatBars.js';
 import { ControlPanel } from './ui/ControlPanel.js';
+import * as saveLoad from './persistence/saveLoad.js';
 import { SIM_SPEEDS, MAX_TICKS_PER_FRAME, TILE_SIZE } from './config/constants.js';
 
 // --- Construct the world ---
@@ -30,8 +31,47 @@ const timeControls = new TimeControls(document.getElementById('time-section'), {
   onSpeedChange: (s) => { speed = s; },
   initial: 'normal',
 });
-const statBars = new StatBars(document.getElementById('panel-stats'));
-new ControlPanel(document.getElementById('panel-controls'), city);
+const panelStatsEl = document.getElementById('panel-stats');
+const panelControlsEl = document.getElementById('panel-controls');
+let statBars = new StatBars(panelStatsEl);
+new ControlPanel(panelControlsEl, city);
+
+const AUTOSAVE_INTERVAL = 300; // ticks
+let lastAutosaveTick = 0;
+
+function rebuildSidePanels() {
+  panelStatsEl.innerHTML = '';
+  panelControlsEl.innerHTML = '';
+  statBars = new StatBars(panelStatsEl);
+  new ControlPanel(panelControlsEl, city);
+}
+
+// --- Overlay selector ---
+let overlayMode = 'none';
+const overlaySelect = document.getElementById('overlay-select');
+overlaySelect.addEventListener('change', () => { overlayMode = overlaySelect.value; });
+const overlayParam = new URLSearchParams(location.search).get('overlay');
+if (overlayParam) { overlayMode = overlayParam; overlaySelect.value = overlayParam; }
+
+// --- Save / Load / New City ---
+document.getElementById('btn-save').addEventListener('click', () => { saveLoad.save(city); });
+document.getElementById('btn-load').addEventListener('click', () => {
+  if (saveLoad.load(city)) afterCityReplaced();
+});
+document.getElementById('btn-new').addEventListener('click', () => {
+  city.reset(Math.floor(Math.random() * 1e9));
+  afterCityReplaced();
+});
+
+function afterCityReplaced() {
+  computeStats(city);
+  traffic.reset();
+  traffic.onTick(city);
+  rebuildSidePanels();
+  userMovedCamera = false; // refit the camera to the new city
+  camera.fitToView();
+  lastAutosaveTick = city.tick;
+}
 
 // --- Input: drag to pan, wheel to zoom ---
 let dragging = false, lastX = 0, lastY = 0;
@@ -98,10 +138,15 @@ function frame(now) {
       steps++;
     }
     if (steps === MAX_TICKS_PER_FRAME) acc = 0; // drop backlog; never fast-forward
+
+    if (city.tick - lastAutosaveTick >= AUTOSAVE_INTERVAL) {
+      saveLoad.save(city);
+      lastAutosaveTick = city.tick;
+    }
   }
 
   traffic.advance(dt);               // cars move in real time -> smooth at any sim speed
-  renderer.draw(city.grid, traffic);
+  renderer.draw(city.grid, traffic, overlayMode);
 
   if (now - lastPanel > 150) {       // throttle DOM stat updates to ~7Hz
     timeControls.update(city);

@@ -20,6 +20,15 @@ export class TrafficSystem {
     this.rebuildEndpoints();
   }
 
+  // Clear all cars and rebuild endpoints (used after load/new-city).
+  reset() {
+    this.cars.length = 0;
+    this.pool.length = 0;
+    this.pathfinder.clearCache();
+    this.targetFleet = B.MIN_CARS;
+    this.rebuildEndpoints();
+  }
+
   // Recompute spawn endpoints from the current grid. Called when roads change.
   rebuildEndpoints() {
     const g = this.city.grid;

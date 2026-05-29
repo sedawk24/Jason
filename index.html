@@ -16,6 +16,19 @@
     <div id="panel">
       <header id="panel-header">
         <span class="panel-title">Autonomous City Simulator</span>
+        <div id="panel-actions">
+          <label class="overlay-label">Overlay
+            <select id="overlay-select">
+              <option value="none">None</option>
+              <option value="landvalue">Land value</option>
+              <option value="coverage">Services</option>
+              <option value="power">Power</option>
+            </select>
+          </label>
+          <button id="btn-save" class="action-btn">Save</button>
+          <button id="btn-load" class="action-btn">Load</button>
+          <button id="btn-new" class="action-btn">New City</button>
+        </div>
         <div id="time-section"></div>
       </header>
       <div id="panel-body">

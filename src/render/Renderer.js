@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../config/constants.js';
 import { colorFor } from './tileSprites.js';
 import { drawCars } from './carLayer.js';
+import { drawOverlay } from './overlays.js';
 
 // Canvas orchestrator. Reads model state and draws it; never mutates the model.
 // draw() takes what it needs as arguments so the renderer stays decoupled from
@@ -29,7 +30,7 @@ export class Renderer {
     this.camera.setViewport(rect.width, rect.height);
   }
 
-  draw(grid, traffic = null) {
+  draw(grid, traffic = null, overlayMode = 'none') {
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
@@ -38,6 +39,7 @@ export class Renderer {
     ctx.fillRect(0, 0, this.cssW, this.cssH);
 
     this.drawTiles(grid);
+    drawOverlay(ctx, this.camera, grid, overlayMode);
     if (traffic) drawCars(ctx, this.camera, grid, traffic);
   }
 

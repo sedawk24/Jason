@@ -1,18 +1,23 @@
-// Live readouts: population, jobs, unemployment, treasury + net flow, power and
-// water supply/demand, and the diverging RCI demand bars. Reads city.stats,
-// city.economy, and city.demand; never mutates the model.
+// Live readouts: population, jobs, unemployment, approval, service coverage,
+// treasury + net flow, power and water supply/demand, and the diverging RCI
+// demand bars. Reads city.stats / city.economy / city.demand; never mutates.
 export class StatBars {
   constructor(container) {
     const root = document.createElement('div');
     root.className = 'stats';
 
-    this.popEl = makeStat(root, 'Population');
-    this.jobsEl = makeStat(root, 'Jobs');
-    this.unempEl = makeStat(root, 'Unemployment');
-    this.treasuryEl = makeStat(root, 'Treasury');
-    this.flowEl = makeStat(root, 'Net / week');
-    this.powerEl = makeStat(root, 'Power');
-    this.waterEl = makeStat(root, 'Water');
+    const grid = document.createElement('div');
+    grid.className = 'stat-grid';
+    this.popEl = makeStat(grid, 'Population');
+    this.jobsEl = makeStat(grid, 'Jobs');
+    this.unempEl = makeStat(grid, 'Unemployment');
+    this.approvalEl = makeStat(grid, 'Approval');
+    this.coverageEl = makeStat(grid, 'Services');
+    this.treasuryEl = makeStat(grid, 'Treasury');
+    this.flowEl = makeStat(grid, 'Net / week');
+    this.powerEl = makeStat(grid, 'Power');
+    this.waterEl = makeStat(grid, 'Water');
+    root.appendChild(grid);
 
     const rci = document.createElement('div');
     rci.className = 'rci';
@@ -33,6 +38,9 @@ export class StatBars {
     this.popEl.textContent = fmt(s.population);
     this.jobsEl.textContent = fmt(s.jobsC + s.jobsI);
     this.unempEl.textContent = (s.unemployment * 100).toFixed(0) + '%';
+    this.approvalEl.textContent = Math.round(s.approval) + '%';
+    this.approvalEl.classList.toggle('negative', s.approval < 40);
+    this.coverageEl.textContent = Math.round(s.coverage01 * 100) + '%';
 
     this.treasuryEl.textContent = money(e.treasury);
     this.treasuryEl.classList.toggle('negative', e.treasury < 0);

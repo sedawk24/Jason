@@ -14,6 +14,11 @@ export class ControlPanel {
     const budgets = group(container, 'Budgets');
     new Slider(budgets, { label: 'Roads', min: 0, max: 1, step: 0.05, value: city.params.budgetRoads, format: pct, onChange: (v) => { city.params.budgetRoads = v; } });
     new Slider(budgets, { label: 'Utilities', min: 0, max: 1, step: 0.05, value: city.params.budgetUtil, format: pct, onChange: (v) => { city.params.budgetUtil = v; } });
+
+    const services = group(container, 'Services');
+    new Slider(services, { label: 'Police', min: 0, max: 1, step: 0.05, value: city.params.budgetPolice, format: pct, onChange: (v) => { city.params.budgetPolice = v; } });
+    new Slider(services, { label: 'Fire', min: 0, max: 1, step: 0.05, value: city.params.budgetFire, format: pct, onChange: (v) => { city.params.budgetFire = v; } });
+    new Slider(services, { label: 'Education', min: 0, max: 1, step: 0.05, value: city.params.budgetEdu, format: pct, onChange: (v) => { city.params.budgetEdu = v; } });
   }
 }
 

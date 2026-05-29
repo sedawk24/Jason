@@ -67,6 +67,23 @@ export const B = {
   DEV_DEMAND_W: 0.7,       // growth-score weight on demand
   DEV_LV_W: 0.3,           // growth-score weight on land value
 
+  // --- City services (police / fire / education) ---
+  SERVICE_RADIUS: 12,      // coverage reach of one service building
+  SERVICE_STRENGTH: 150,   // peak coverage per building (before funding scaling)
+  SERVICE_COOLDOWN: 5,     // min ticks between auto-built services
+  SERVICE_INTERVAL: 3,     // recompute coverage every N ticks
+  COVERAGE_TARGET: 0.40,   // auto-build when avg coverage over population < this
+  POLICE_COST: 1500, FIRE_COST: 1500, SCHOOL_COST: 2000,
+  POLICE_MAINT: 40, FIRE_MAINT: 40, SCHOOL_MAINT: 55,
+  LV_COVERAGE: 45,         // coverage's contribution to land value (at full coverage)
+  R_SERVICE: 0.25,         // residential demand boost from service coverage
+
+  // --- Approval ---
+  APPROVAL_TAX_SLOPE: 180, // displeasure per unit of tax above comfort
+  APPROVAL_UNEMP_PEN: 60,  // penalty per unit unemployment rate
+  APPROVAL_DEFICIT_PEN: 25,// penalty while bankrupt
+  APPROVAL_SERVICE_BONUS: 30, // bonus per unit of (coverage - 0.5)
+
   // --- Traffic / cars ---
   CARS_PER_CAPITA: 0.02,
   MIN_CARS: 12,

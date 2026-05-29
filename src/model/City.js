@@ -33,6 +33,7 @@ export class City {
     this.stats = {
       population: 0, jobsC: 0, jobsI: 0,
       roadTiles: 0, powerPlants: 0, waterTowers: 0,
+      police: 0, fire: 0, school: 0,
       powerCap: 0, powerDraw: 0, waterCap: 0, waterDraw: 0,
       coverage01: 0, avgLandValue01: 0, avgCongestion01: 0,
       approval: 100, unemployment: 0, bankrupt: false,
@@ -42,8 +43,46 @@ export class City {
     // Engine bookkeeping.
     this.roadFrontier = new Set();
     this.roadGraphDirty = true;
-    this.lastPowerBuild = -999; // tick of last auto-built power plant (cooldown)
-    this.lastWaterBuild = -999; // tick of last auto-built water tower (cooldown)
+    this.lastPowerBuild = -999;   // tick of last auto-built power plant (cooldown)
+    this.lastWaterBuild = -999;   // tick of last auto-built water tower (cooldown)
+    this.lastServiceBuild = -999; // tick of last auto-built service building (cooldown)
+  }
+
+  // Reset to a fresh new city in place (keeps object identity so existing
+  // references -- traffic, renderer, UI -- stay valid). Used by the "New City" action.
+  reset(seed) {
+    this.seed = seed;
+    this.rng = mulberry32(seed);
+    this.tick = 0;
+    this.grid.clear();
+
+    this.params.taxR = 0.09; this.params.taxC = 0.09; this.params.taxI = 0.09;
+    this.params.budgetRoads = 1; this.params.budgetUtil = 1;
+    this.params.budgetPolice = 1; this.params.budgetFire = 1; this.params.budgetEdu = 1;
+
+    this.demand.R = 0; this.demand.C = 0; this.demand.I = 0;
+
+    this.economy.treasury = B.START_TREASURY;
+    this.economy.lastIncome = 0;
+    this.economy.lastExpenses = 0;
+    this.economy.history.length = 0;
+
+    const s = this.stats;
+    s.population = 0; s.jobsC = 0; s.jobsI = 0;
+    s.roadTiles = 0; s.powerPlants = 0; s.waterTowers = 0;
+    s.police = 0; s.fire = 0; s.school = 0;
+    s.powerCap = 0; s.powerDraw = 0; s.waterCap = 0; s.waterDraw = 0;
+    s.coverage01 = 0; s.avgLandValue01 = 0; s.avgCongestion01 = 0;
+    s.approval = 100; s.unemployment = 0; s.bankrupt = false;
+
+    this.roadFrontier.clear();
+    this.roadGraphDirty = true;
+    this.lastPowerBuild = -999;
+    this.lastWaterBuild = -999;
+    this.lastServiceBuild = -999;
+
+    this.grid.generate(this.rng);
+    this.seedSettlement();
   }
 
   static createNew(seed = 12345) {

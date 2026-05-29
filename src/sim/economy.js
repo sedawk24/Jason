@@ -14,7 +14,10 @@ export function runEconomy(city) {
 
   const expenses =
     s.roadTiles * B.MAINT_ROAD * p.budgetRoads +
-    (s.powerPlants * B.POWER_MAINT + s.waterTowers * B.WATER_MAINT) * p.budgetUtil;
+    (s.powerPlants * B.POWER_MAINT + s.waterTowers * B.WATER_MAINT) * p.budgetUtil +
+    s.police * B.POLICE_MAINT * p.budgetPolice +
+    s.fire * B.FIRE_MAINT * p.budgetFire +
+    s.school * B.SCHOOL_MAINT * p.budgetEdu;
 
   e.lastIncome = income;
   e.lastExpenses = expenses;
