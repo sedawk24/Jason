@@ -63,6 +63,13 @@ html, body {
 }
 .legend.hidden { display: none; }
 .legend-title { font-weight: 600; color: #e6e8ea; margin-bottom: 5px; }
+.legend-subhead {
+  font-weight: 600;
+  color: #aeb6bf;
+  margin: 7px 0 4px;
+  padding-top: 6px;
+  border-top: 1px solid #2c333d;
+}
 .legend-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
 .legend-swatch { width: 11px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
 .legend-note { margin-top: 5px; color: #8a929c; font-size: 10px; }

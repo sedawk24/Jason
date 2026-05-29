@@ -28,5 +28,11 @@ export function colorFor(type, density = 0) {
   return FLAT[type] || '#ff00ff'; // magenta = unhandled type (should never show)
 }
 
-// Car body colors, assigned at spawn for visual variety.
-export const CAR_COLORS = ['#f5f5f5', '#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#e07a5f', '#c0c5ce', '#8ecae6'];
+// Car colors by trip type. A car on a congested road overrides to `congested`
+// (red) and also slows down -- see traffic/TrafficSystem and render/carLayer.
+export const CAR_COLORS = {
+  toWork: '#4cc9f0',    // home -> work (commuting out)
+  toHome: '#b5e853',    // work -> home (commuting back)
+  other: '#f4a261',     // other / business trip
+  congested: '#ef3b4e', // on a congested road (overrides the trip color)
+};

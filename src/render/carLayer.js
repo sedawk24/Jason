@@ -1,7 +1,10 @@
 import { TILE_SIZE } from '../config/constants.js';
+import { B } from '../config/balance.js';
+import { CAR_COLORS } from './tileSprites.js';
 
 // Draw cars at their interpolated positions. Called every render frame; reads
 // car state (which advances in real time) so motion is smooth at any sim speed.
+// A car on a congested road is drawn red (overriding its trip-type color).
 export function drawCars(ctx, camera, grid, traffic) {
   const ts = TILE_SIZE * camera.zoom;
   if (ts < 2) return; // too zoomed out for cars to be legible
@@ -25,7 +28,8 @@ export function drawCars(ctx, camera, grid, traffic) {
     const ty = ay + (by - ay) * f + 0.5;
     const s = camera.worldToScreen(tx * TILE_SIZE, ty * TILE_SIZE);
 
-    ctx.fillStyle = car.color;
+    const congested = grid.traffic[a] >= B.CAR_CONGEST_RED;
+    ctx.fillStyle = congested ? CAR_COLORS.congested : car.color;
     ctx.fillRect(s.x - half, s.y - half, size, size);
   }
 }

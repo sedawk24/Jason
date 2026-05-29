@@ -80,7 +80,7 @@ export class TrafficSystem {
     const path = this.tripFrom(src);
     if (!path) return false;
     const car = this.pool.pop() || new Car();
-    car.reset(path, this.randomSpeed(), this.randomColor());
+    car.reset(path, this.randomSpeed(), this.tripColor(path));
     this.cars.push(car);
     return true;
   }
@@ -101,9 +101,13 @@ export class TrafficSystem {
   advance(dt) {
     let pathBudget = B.MAX_PATHS_PER_FRAME;
     const cars = this.cars;
+    const traffic = this.city.grid.traffic;
     for (let k = cars.length - 1; k >= 0; k--) {
       const car = cars[k];
-      car.progress += car.speed * dt;
+      // Cars crawl on congested roads (visual speed indicator).
+      const cell = car.path[Math.min(Math.floor(car.progress), car.path.length - 1)];
+      const slow = 1 - B.CAR_CONGEST_SLOW * (traffic[cell] / 255);
+      car.progress += car.speed * dt * slow;
       if (!car.arrived) continue;
 
       let newPath = null;
@@ -112,7 +116,7 @@ export class TrafficSystem {
         pathBudget--;
       }
       if (newPath && newPath.length >= 2) {
-        car.reset(newPath, this.randomSpeed(), car.color);
+        car.reset(newPath, this.randomSpeed(), this.tripColor(newPath));
       } else {
         cars.splice(k, 1);
         car.path = null;
@@ -132,7 +136,26 @@ export class TrafficSystem {
     return B.CAR_SPEED * v;
   }
 
-  randomColor() {
-    return CAR_COLORS[(this.rng() * CAR_COLORS.length) | 0];
+  // Dominant building zone (R/C/I) served by a road endpoint, or 0 if none.
+  endpointZone(i) {
+    const g = this.city.grid;
+    const x = g.xOf(i), y = g.yOf(i);
+    let zone = 0;
+    g.forEachVonNeumann(x, y, (nx, ny, ni) => {
+      if (zone) return;
+      const t = g.type[ni];
+      if (t === TileType.RESIDENTIAL || t === TileType.COMMERCIAL || t === TileType.INDUSTRIAL) zone = t;
+    });
+    return zone;
+  }
+
+  // Color a trip by its origin/destination zones: home->work, work->home, or other.
+  tripColor(path) {
+    const o = this.endpointZone(path[0]);
+    const d = this.endpointZone(path[path.length - 1]);
+    const isWork = (z) => z === TileType.COMMERCIAL || z === TileType.INDUSTRIAL;
+    if (o === TileType.RESIDENTIAL && isWork(d)) return CAR_COLORS.toWork;
+    if (isWork(o) && d === TileType.RESIDENTIAL) return CAR_COLORS.toHome;
+    return CAR_COLORS.other;
   }
 }

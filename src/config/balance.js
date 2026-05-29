@@ -105,6 +105,8 @@ export const B = {
   PATH_CACHE_SIZE: 256,
   PATH_CACHE_REFRESH: 40,    // clear path cache every N ticks so routes adapt to congestion
   ENDPOINT_REBUILD: 20,      // rebuild car endpoints every N ticks (catch zoning/build changes)
+  CAR_CONGEST_RED: 140,      // road congestion (0..255) at which a car shows red
+  CAR_CONGEST_SLOW: 0.65,    // max fraction a car slows on a fully congested road
 
   // --- Traffic congestion (deterministic, tick-time; derived from local activity) ---
   CONGEST_INTERVAL: 3,        // recompute congestion every N ticks
