@@ -4,15 +4,26 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 ## Project Overview
 
-{Brief description of the project. 2-3 sentences max.}
+An autonomous, browser-based city simulator in the spirit of SimCity. The city **builds itself** -- the engine lays roads, zones land, develops buildings, and constructs utilities and services on its own. The user is a policy-maker who sets taxation rates, budgets, and service funding via sliders and watches the city grow from bare land, with cars animating along the roads.
 
 ## Tech Stack
 
-{Filled in during project planning.}
+- **Language:** Vanilla JavaScript (ES modules) -- no framework, no TypeScript.
+- **Rendering:** HTML5 Canvas, top-down 2D tile grid.
+- **UI:** Plain HTML + CSS for the bottom control panel.
+- **Build:** None. Plain `index.html` + ES module files. Zero npm dependencies.
+- **Run:** Any static server (ES modules require http, not `file://`), e.g. `python3 -m http.server 8000`.
+- **Persistence:** `localStorage` (typed arrays serialized to base64).
 
 ## Architecture
 
-{Brief architecture summary. Filled in during project planning.}
+Three strictly separated layers:
+
+1. **Model** (`src/model/`, `src/config/`) -- pure data + logic. The grid is Structure-of-Arrays typed arrays (128x128). `City` is the single source of truth for a save. The model advances only in discrete integer **ticks** and knows nothing about the canvas, DOM, or wall-clock time.
+2. **Simulation** (`src/sim/`) -- `simulate.tick(city)` runs an ordered per-tick pipeline (land value -> utilities -> services -> demand -> roads -> zoning -> development -> economy -> stats). It is the **only** code that mutates the model on a tick.
+3. **Presentation** (`src/render/`, `src/traffic/`, `src/ui/`) -- the renderer reads model state and draws (never mutates it); the UI writes user params into the model and reads stats out.
+
+`src/main.js` owns a **dual loop**: a 60fps `requestAnimationFrame` render loop for smooth car animation, plus a separate speed-controllable tick cadence driven by a time accumulator. Cars animate in real wall-clock time (interpolated between road cells) independent of the simulation tick rate. The autonomous growth engine combines a global RCI (Residential/Commercial/Industrial) demand model with local cellular rules, all governed by tunable constants in `src/config/balance.js`.
 
 ## Key Documentation
 
@@ -68,4 +79,14 @@ When this is a new project and a development plan has been created, the FIRST im
 
 ## Project Conventions
 
-{Project-specific coding conventions, style rules, etc. Filled in during project planning.}
+- **No build step, no dependencies.** Keep it runnable by opening `index.html` through a static server. Do not introduce npm packages, bundlers, or TypeScript without logging a decision in `docs/architecture/decisions.md`.
+- **ES modules only.** Every file under `src/` is an ES module (`import`/`export`). Reference scripts with `<script type="module">`.
+- **Layer discipline (enforce strictly):**
+  - The model/sim layer must never touch `document`, `window`, `canvas`, or `performance` (except where wall-clock is explicitly the renderer's job). Keep it pure so it can be unit-tested in Node.
+  - `simulate.tick(city)` is the only tick-time mutator of model state.
+  - The UI writes only to `city.params`; the renderer and traffic system are read-only with respect to the saved model.
+- **All tunable numbers live in `src/config/balance.js`.** Never hard-code balance/economy magic numbers inside logic -- add them to `balance.js` and reference them.
+- **Determinism.** Every stochastic choice uses the seeded RNG in `src/model/rng.js` (mulberry32) so saves reload identically and bugs reproduce.
+- **Performance.** Use typed arrays for the grid; avoid per-frame/per-tick allocation in hot paths (object-pool cars, reuse buffers); use neighbor-iteration callbacks rather than allocating arrays.
+- **Style.** Modern JS (`const`/`let`, arrow functions where natural). Two-space indentation. Small, single-responsibility modules matching the file layout in this document. Comment the "why," not the obvious "what."
+- **Testing.** Pure model/sim modules can be smoke-tested in Node (`node --input-type=module`). Visual/timing behavior is verified in the browser against each phase's verification checklist in the development tracker.
