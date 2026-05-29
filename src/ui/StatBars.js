@@ -39,7 +39,7 @@ export class StatBars {
     this.jobsEl.textContent = fmt(s.jobsC + s.jobsI);
     this.unempEl.textContent = (s.unemployment * 100).toFixed(0) + '%';
     this.approvalEl.textContent = Math.round(s.approval) + '%';
-    this.approvalEl.classList.toggle('negative', s.approval < 40);
+    this.approvalEl.style.color = s.approval >= 75 ? '#7fd18a' : s.approval >= 50 ? '#e6e8ea' : '#e5635b';
     this.coverageEl.textContent = Math.round(s.coverage01 * 100) + '%';
 
     this.treasuryEl.textContent = money(e.treasury);

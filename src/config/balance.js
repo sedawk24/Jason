@@ -76,13 +76,19 @@ export const B = {
   POLICE_COST: 1500, FIRE_COST: 1500, SCHOOL_COST: 2000,
   POLICE_MAINT: 40, FIRE_MAINT: 40, SCHOOL_MAINT: 55,
   LV_COVERAGE: 45,         // coverage's contribution to land value (at full coverage)
-  R_SERVICE: 0.25,         // residential demand boost from service coverage
+  R_SERVICE: 0.35,         // residential demand boost from service coverage
 
-  // --- Approval ---
+  // --- Approval (the central "is the city well run?" signal; drives demand) ---
+  // approval = BASE + SERVICE_BONUS*coverage - tax/unemployment/deficit/congestion
+  // penalties. BASE+BONUS < 100 so a healthy city sits in a visible band (not
+  // pegged at the cap), and cutting services clearly drops it.
+  APPROVAL_BASE: 72,       // baseline approval before services and penalties
   APPROVAL_TAX_SLOPE: 180, // displeasure per unit of tax above comfort
   APPROVAL_UNEMP_PEN: 60,  // penalty per unit unemployment rate
   APPROVAL_DEFICIT_PEN: 25,// penalty while bankrupt
-  APPROVAL_SERVICE_BONUS: 30, // bonus per unit of (coverage - 0.5)
+  APPROVAL_SERVICE_BONUS: 28, // approval bonus per unit of service coverage (0..1)
+  APPROVAL_DEMAND: 0.5,    // how strongly approval pushes/suppresses RCI demand
+  APPROVAL_NEUTRAL: 0.62,  // approval (0..1) at which the demand push is zero
 
   // --- Traffic / cars (visual layer) ---
   CARS_PER_CAPITA: 0.02,

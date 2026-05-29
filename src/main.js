@@ -7,6 +7,7 @@ import { tick as simTick, rehydrate } from './sim/simulate.js';
 import { computeStats } from './sim/stats.js';
 import { StatBars } from './ui/StatBars.js';
 import { ControlPanel } from './ui/ControlPanel.js';
+import { Legend } from './ui/Legend.js';
 import * as saveLoad from './persistence/saveLoad.js';
 import { SIM_SPEEDS, MAX_TICKS_PER_FRAME, TILE_SIZE } from './config/constants.js';
 
@@ -48,6 +49,9 @@ function rebuildSidePanels() {
 }
 
 // --- Overlay selector ---
+const legend = new Legend(document.getElementById('cityView'));
+document.getElementById('btn-legend').addEventListener('click', () => legend.toggle());
+
 let overlayMode = 'none';
 const overlaySelect = document.getElementById('overlay-select');
 overlaySelect.addEventListener('change', () => { overlayMode = overlaySelect.value; });

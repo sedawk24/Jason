@@ -18,6 +18,8 @@ Future features, ideas, and deferred work that surface during development. Items
 
 ## Improvements
 
+- **Distinct per-service roles.** Police/fire/education currently feed one pooled "coverage" value, so cutting one service is compensated by auto-building the others. Giving each a specific effect (e.g. police -> safety/land value, fire -> enables higher density, education -> commercial/industrial productivity) would make each slider individually meaningful.
+
 - **Late-game economy balance pass.** The review-response capacity-gating fix (occupancy reserves utility capacity) substantially tightened growth and the economy -- the old runaway multi-million surplus is gone and a default-tax city now runs near break-even. Worth a fresh tuning pass to confirm both default and intentionally-bad policies feel right over a long game.
 - Cache the static tile layer to an offscreen canvas; redraw only changed regions for large cities.
 - Configurable map size and tick length from the UI.

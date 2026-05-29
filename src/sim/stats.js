@@ -55,11 +55,11 @@ export function computeStats(city) {
   const p = city.params;
   const taxDispleasure =
     (Math.max(0, p.taxR - B.TAX_COMFORT) + Math.max(0, p.taxC - B.TAX_COMFORT) + Math.max(0, p.taxI - B.TAX_COMFORT)) * B.APPROVAL_TAX_SLOPE;
-  const approval = 100
+  const approval = B.APPROVAL_BASE
+    + B.APPROVAL_SERVICE_BONUS * s.coverage01
     - taxDispleasure
     - B.APPROVAL_UNEMP_PEN * s.unemployment
     - (s.bankrupt ? B.APPROVAL_DEFICIT_PEN : 0)
-    - B.APPROVAL_CONGEST_PEN * s.avgCongestion01
-    + B.APPROVAL_SERVICE_BONUS * (s.coverage01 - 0.5);
+    - B.APPROVAL_CONGEST_PEN * s.avgCongestion01;
   s.approval = Math.max(0, Math.min(100, approval));
 }

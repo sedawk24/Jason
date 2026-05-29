@@ -122,3 +122,11 @@ Following an external code review (`docs/review/codex-review-2026-05-29.md`), se
 **Reasoning:** Density-0 zones draw zero utilities, so they were flagged powered/watered even at zero capacity and could become occupied with no real supply (e.g. utilities budget 0 still grew the city). Reserving capacity for new occupancy closes that.
 
 **Also:** roads budget scales road expansion + congestion (no longer upside-only); service coverage and placement are weighted by population+jobs (not tile count); fire stations use their own cost; map center/extent math reads grid dimensions; dead state removed; sliders get `aria-label`s; Save/Load expose status feedback; persistent regression tests added (`tests/sim.test.mjs`).
+
+## 2026-05-29 -- Approval is the central policy signal (drives demand) + map legend
+
+**Decision:** Approval is set by taxes, unemployment, bankruptcy, congestion, and service coverage; it sits in a visible band (base 72 + up to ~28 from services, minus penalties -- not pegged at 100) and now directly pushes or suppresses RCI demand. The Approval readout is color-coded. A map legend overlay was added.
+
+**Reasoning:** The budget/service sliders previously had only weak, slow effects and approval was a passive readout, so cutting budgets felt consequence-free (you just accrued money). Routing policy through a visible approval gauge that drives growth makes every lever legible: over-tax, under-fund services, or let congestion build, and approval drops and growth slows/stalls.
+
+**Known limitation:** the three service budgets feed one pooled coverage value, so the engine compensates for cutting a single service by auto-building more of the others -- individual service sliders are therefore weak. Distinct per-service roles (police/fire/education each doing something specific) are a candidate next step (see backlog).
