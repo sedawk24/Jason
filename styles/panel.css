@@ -68,3 +68,70 @@
   min-width: 150px;
   text-align: right;
 }
+
+/* --- Stats & RCI demand bars --- */
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: 380px;
+}
+.stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.stat-label { color: #8a929c; }
+.stat-value {
+  color: #e6e8ea;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rci {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 4px;
+}
+.rci-head {
+  color: #8a929c;
+  font-size: 12px;
+  margin-bottom: 1px;
+}
+.rci-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rci-label {
+  width: 14px;
+  color: #aeb6bf;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rci-track {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: #2a313b;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rci-track::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #475260;
+}
+.rci-fill { position: absolute; top: 0; bottom: 0; }
+.rci-fill.r { background: #4ba84a; }
+.rci-fill.c { background: #2491e0; }
+.rci-fill.i { background: #cf9d1c; }
+
+.panel-hint {
+  margin: 12px 0 0;
+}

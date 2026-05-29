@@ -1,6 +1,6 @@
 # Current State
 
-**Status: Phase B complete (timing + cars working). Beginning Phase C (autonomous growth core).**
+**Status: Phase C complete (the city builds itself). Beginning Phase D (economy, utilities, density, decline).**
 
 This is an autonomous browser-based city simulator. See `README.md` for what it is and how to run it, and `CLAUDE.md` for architecture and conventions.
 
@@ -8,17 +8,17 @@ This is an autonomous browser-based city simulator. See `README.md` for what it 
 
 ## What Is Complete
 
-- **Phase 0 -- Project setup & tracking.** Architecture, conventions, phases, and decisions documented.
-- **Phase A -- Foundation.** HTML/CSS layout, typed-array grid with deterministic land/water generation, pan/zoom camera with culling, canvas renderer, render loop + FPS counter.
-- **Phase B -- Dual-loop timing + seed roads + cars.** The `City` save-state model with a seed settlement (tic-tac-toe roads + buildings); the dual loop (60fps render + a speed-controllable tick cadence via a time accumulator, with dt-clamp and backlog-drop so tab-switching never fast-forwards); time/speed controls (Pause/Slow/Normal/Fast) and an in-game date; A* pathfinding over roads with an LRU cache; a pooled car system whose cars interpolate in real time (smooth at any sim speed, including paused); car rendering. Verified via a Node functional test (pathfinding correctness, motion, pause behavior) and a headless screenshot (60fps, 12 cars driving the road grid).
+- **Phase 0 -- Project setup & tracking.**
+- **Phase A -- Foundation.** Layout, typed-array grid + water gen, camera (pan/zoom/cull), renderer, render loop.
+- **Phase B -- Dual-loop timing + seed roads + cars.** City save-state model + seed settlement; dual loop (60fps render + speed-controllable tick cadence, tab-switch safe); time/speed controls + date; A* pathfinding + LRU cache; pooled, real-time-interpolated cars.
+- **Phase C -- Autonomous growth core.** The city now builds itself from the seed: an RCI demand model (job/worker/population feedback loops, tax suppression, EMA smoothing) drives grid-aligned road extension, demand-weighted zoning (with district clustering and residential/industrial separation), and low-density building development with hysteresis. Stats (population, jobs, unemployment) and RCI demand bars + readouts are live. Verified via Node simulation (gradual, stable, tax-responsive, deterministic growth) and headless screenshots (believable ~25k-pop grid city at 60+fps; ~29% road share). Debug aids: `?ticks=N` fast-forward and `?cam=x,y,zoom`.
 
 ## What Is In Progress
 
-- **Phase C -- Autonomous growth core.** Filling the `simulate.tick` pipeline so the city builds itself: an RCI (Residential/Commercial/Industrial) demand model with feedback loops and tax suppression; frontier-based road extension; zoning of road-adjacent land; low-density building development; and basic stats (population, jobs). Adding RCI demand bars and a population readout to the panel. Goal: from the seed, roads branch and zones fill on their own, responding to tax policy, with gradual (non-explosive, non-stalling) growth.
+- **Phase D -- Economy + utilities + density/decline.** Adding the treasury/economy (tax income, maintenance expenses, bankruptcy effects); a land-value field (road access up, industry adjacency down) feeding development; autonomous power & water (connectivity flood-fill + auto-build on deficit, on a cooldown and gated by treasury); medium/high density (land-value-capped) and decline/abandonment when under-served; and the policy UI (tax + budget sliders, treasury and power/water readouts).
 
 ## What Is Next
 
-- **Phase D -- Economy + utilities + density/decline:** treasury, taxes, auto-built power/water, medium/high density, decline.
 - **Phase E -- City services + approval + overlays + save/load:** police/fire/education, approval gauge, data overlays, persistence.
 - **Phase F -- Traffic congestion + tuning hardening:** congestion effects, balance, robustness.
 

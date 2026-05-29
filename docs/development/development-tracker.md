@@ -11,8 +11,8 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 | 0 | Project setup & tracking | Complete |
 | A | Foundation (grid + camera + render loop) | Complete |
 | B | Dual-loop timing + seed roads + cars | Complete |
-| C | Autonomous growth core (RCI + roads + zoning + dev) | In Progress |
-| D | Economy + utilities + density/decline | Not Started |
+| C | Autonomous growth core (RCI + roads + zoning + dev) | Complete |
+| D | Economy + utilities + density/decline | In Progress |
 | E | City services + approval + overlays + save/load | Not Started |
 | F | Traffic congestion + tuning hardening | Not Started |
 
@@ -97,30 +97,32 @@ Goal: prove the timing model -- smooth 60fps cars on a separate, speed-controlla
 
 ---
 
-## Phase C: Autonomous growth core (Not Started)
+## Phase C: Autonomous growth core (Complete)
 
-Goal: the city builds itself -- roads branch, zones fill, low-density buildings develop, driven by RCI demand and policy.
+Goal: the city builds itself -- roads grow, zones fill, low-density buildings develop, driven by RCI demand and policy.
 
 ### Tasks
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | `src/config/balance.js` (all tunables) | Not Started | |
-| 2 | `src/sim/demand.js` (RCI model with feedback + EMA) | Not Started | |
-| 3 | `src/sim/roads.js` (frontier-based road extension) | Not Started | |
-| 4 | `src/sim/zoning.js` (road-adjacent R/C/I designation) | Not Started | |
-| 5 | `src/sim/development.js` (empty->low density) | Not Started | |
-| 6 | `src/sim/stats.js` (population, jobs aggregates) | Not Started | |
-| 7 | `src/sim/simulate.js` (tick pipeline) | Not Started | |
-| 8 | RCI demand bars + population readout (`src/ui/`) | Not Started | |
+| 1 | `src/config/balance.js` (growth/demand tunables) | Complete | All magic numbers centralized |
+| 2 | `src/sim/demand.js` (RCI model with feedback + EMA) | Complete | Job/worker/pop feedback; tax suppression |
+| 3 | `src/sim/roads.js` (grid-aligned road extension) | Complete | Grid growth -> believable blocks (~30% road) |
+| 4 | `src/sim/zoning.js` (R/C/I designation near roads) | Complete | Demand-weighted; clustering + R/I separation |
+| 5 | `src/sim/development.js` (empty->low density) | Complete | devLevel ramp + hysteresis |
+| 6 | `src/sim/stats.js` (population, jobs aggregates) | Complete | Writes per-tile pop/jobs; unemployment |
+| 7 | `src/sim/simulate.js` (tick pipeline) | Complete | demand->roads->zoning->dev->stats |
+| 8 | `src/sim/helpers.js` + RCI bars + population readout | Complete | `StatBars`; `?ticks=`/`?cam=` debug aids |
 
 ### Verification
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Roads/zones/buildings grow from a seed with no input | Pending | |
-| Demand bars respond; raising a tax slows that zone | Pending | |
-| Growth gradual -- never explodes or stalls at zero | Pending | |
+| Roads/zones/buildings grow from a seed with no input | Pass | Headless screenshot: full grid city, 24.9k pop at tick 1200 |
+| Growth gradual -- never explodes or stalls at zero | Pass | Node sim: built 1.9k->8.2k over ticks 400-2000, finite, clamped |
+| Believable city form (blocks, not sprawl) | Pass | 29% road share; buildings outnumber roads ~2.4:1 |
+| Raising a tax suppresses that zone's demand/growth | Pass | Node test: 20% residential tax -> 0 residential pop vs 5% tax |
+| Deterministic | Pass | Node test: identical population across two runs of same seed |
 
 ---
 
@@ -206,3 +208,4 @@ Goal: traffic that matters, plus balance and robustness.
 | 2026-05-29 | 0 | Planning complete; tracking files populated; architecture & decisions recorded |
 | 2026-05-29 | A | Foundation built: HTML/CSS layout, typed-array grid + water generation, camera (pan/zoom/cull), tile palette, renderer, render loop + FPS. Verified in headless Chrome (62fps, land+water) and Node model smoke test. |
 | 2026-05-29 | B | Dual-loop timing (rAF render + tick accumulator), City save-state model + seed settlement, time/speed controls + date, A* pathfinding + LRU cache, pooled car system with real-time interpolation, car rendering. Verified via Node functional test (pathfinding, motion, pause) and headless screenshot (60fps, 12 cars). |
+| 2026-05-29 | C | Autonomous growth core: RCI demand model (feedback + tax suppression + EMA), grid-aligned road extension, demand-weighted zoning (clustering + R/I separation), low-density development with hysteresis, stats, RCI bars + population readout. Retuned from organic to grid roads for believable blocks. Verified via Node sim (gradual growth, tax response, determinism) and headless screenshots (24.9k-pop grid city, 60+fps). |

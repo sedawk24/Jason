@@ -71,3 +71,13 @@ A running log of significant architectural decisions made during this project. E
 
 **Alternatives considered:**
 - Including pollution and disasters in v1: deferred to backlog to keep v1 scope focused.
+
+## 2026-05-29 -- Grid-aligned autonomous road network
+
+**Decision:** Roads grow on a regular grid -- a tile may become a road only if it lies on a grid line (one every `ROAD_BLOCK` tiles, aligned to the city center) and is adjacent to an existing road. Zoning and development reach up to `ZONE_DIST` tiles from a road so blocks fill in.
+
+**Reasoning:** An earlier organic "stub" growth algorithm produced ~52% road coverage (more road than building) and looked like sprawl, not a city. The grid approach yields believable city blocks at ~30% road coverage, stays connected by construction, expands cleanly outward, and is far easier to reason about and tune. Verified in a headless simulation (29% road share, buildings outnumber roads ~2.4:1, gradual growth over ~1800 ticks).
+
+**Alternatives considered:**
+- Organic stub roads (slime-mold style): rejected -- too many roads, sprawl-like, hard to keep land reachable.
+- Explicit road-segment/graph planner: rejected for v1 -- more complex than needed; the grid rule gives good results simply.

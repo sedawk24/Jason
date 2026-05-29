@@ -4,6 +4,8 @@ import { Renderer } from './render/Renderer.js';
 import { TrafficSystem } from './traffic/TrafficSystem.js';
 import { TimeControls } from './ui/TimeControls.js';
 import { tick as simTick } from './sim/simulate.js';
+import { computeStats } from './sim/stats.js';
+import { StatBars } from './ui/StatBars.js';
 import { SIM_SPEEDS, MAX_TICKS_PER_FRAME, TILE_SIZE } from './config/constants.js';
 
 // --- Construct the world ---
@@ -12,6 +14,12 @@ const camera = new Camera();
 const renderer = new Renderer(canvas, camera);
 
 const city = City.createNew(12345);
+computeStats(city); // initial stats so demand and fleet sizing see the seed town
+
+// Optional fast-forward for screenshots/debugging: ?ticks=N runs N sim ticks now.
+const ffTicks = Math.min(20000, Math.max(0, parseInt(new URLSearchParams(location.search).get('ticks') || '0', 10)));
+for (let t = 0; t < ffTicks; t++) simTick(city);
+
 const traffic = new TrafficSystem(city);
 traffic.onTick(city); // warm-start the initial fleet so cars appear immediately
 
@@ -21,6 +29,7 @@ const timeControls = new TimeControls(document.getElementById('time-section'), {
   onSpeedChange: (s) => { speed = s; },
   initial: 'normal',
 });
+const statBars = new StatBars(document.getElementById('panel-stats'));
 
 // --- Input: drag to pan, wheel to zoom ---
 let dragging = false, lastX = 0, lastY = 0;
@@ -59,6 +68,7 @@ const fpsEl = document.getElementById('fps');
 let lastTime = performance.now();
 let acc = 0; // accumulated fractional ticks
 let frames = 0, fpsLast = lastTime;
+let lastPanel = 0;
 let didInitialFit = false;
 
 function frame(now) {
@@ -90,7 +100,12 @@ function frame(now) {
 
   traffic.advance(dt);               // cars move in real time -> smooth at any sim speed
   renderer.draw(city.grid, traffic);
-  timeControls.update(city);
+
+  if (now - lastPanel > 150) {       // throttle DOM stat updates to ~7Hz
+    timeControls.update(city);
+    statBars.update(city);
+    lastPanel = now;
+  }
 
   frames++;
   if (now - fpsLast >= 500) {
