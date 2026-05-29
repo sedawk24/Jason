@@ -1,6 +1,6 @@
 # Current State
 
-**Status: Phase E complete (services, approval, overlays, save/load). Beginning Phase F (traffic congestion + tuning hardening) -- the final phase.**
+**Status: v1 COMPLETE. All phases (0, A-F) done. The autonomous city simulator is feature-complete and verified.**
 
 This is an autonomous browser-based city simulator. See `README.md` for what it is and how to run it, and `CLAUDE.md` for architecture and conventions.
 
@@ -8,20 +8,31 @@ This is an autonomous browser-based city simulator. See `README.md` for what it 
 
 ## What Is Complete
 
+All planned v1 phases are done:
+
 - **Phase 0 -- Project setup & tracking.**
-- **Phase A -- Foundation.** Layout, typed-array grid + water gen, camera (pan/zoom/cull + robust ResizeObserver fit), renderer, render loop.
-- **Phase B -- Dual-loop timing + seed roads + cars.** City model + seed; dual loop (tab-switch safe); time/speed + date; A* pathfinding; pooled real-time cars.
-- **Phase C -- Autonomous growth core.** RCI demand (feedback + tax suppression), grid-aligned roads, demand-weighted zoning, low-density development.
-- **Phase D -- Economy + utilities + density/decline.** Treasury (income/maintenance/bankruptcy); land-value field; capacity-based power/water with auto-build; med/high density gated by land value; decline + abandonment; policy sliders + economic readouts.
-- **Phase E -- City services + approval + overlays + save/load.** Police/fire/education auto-built service buildings radiating coverage (scaled by funding sliders) that feeds land value, residential demand, and a new approval model; data overlays (land value / service coverage / power heatmaps) via a header selector; Save / Load / New City persistence to `localStorage` (base64 typed arrays) plus autosave every 300 ticks. Verified via Node simulations (service auto-build, coverage defunding, approval vs. taxes, exact save/load roundtrip) and headless screenshots (full dashboard, overlays, ~63fps).
+- **Phase A -- Foundation.** HTML/CSS layout, typed-array grid + water generation, pan/zoom camera with culling and robust fit, canvas renderer, render loop.
+- **Phase B -- Dual-loop timing + seed roads + cars.** City save-state model + seed settlement; 60fps render loop on a separate, speed-controllable, tab-switch-safe tick cadence; time/speed controls + in-game date; A* pathfinding with an LRU cache; pooled cars that interpolate in real time.
+- **Phase C -- Autonomous growth core.** RCI demand model (job/worker/population feedback + tax suppression + EMA), grid-aligned road extension, demand-weighted zoning (clustering + R/I separation), low-density development. The city builds itself.
+- **Phase D -- Economy + utilities + density/decline.** Treasury (tax income, maintenance, bankruptcy); land-value field (downtown premium, road/commerce up, industry down); capacity-based power & water with auto-build; medium/high density gated by land value; decline + abandonment; policy sliders + economic readouts.
+- **Phase E -- City services + approval + overlays + save/load.** Auto-built police/fire/education radiating coverage (scaled by funding) that feeds land value, demand, and an approval model; land-value/coverage/power data overlays; Save / Load / New City via localStorage + autosave.
+- **Phase F -- Traffic congestion + tuning hardening.** Cars generate congestion that decays, raises routing cost (cars reroute around jams), lowers nearby land value, and dings approval; congestion overlay; robustness hardening (extreme settings stay finite and bounded).
 
 ## What Is In Progress
 
-- **Phase F -- Traffic congestion + tuning hardening (final).** Making traffic matter: cars write congestion into `grid.traffic` (with decay), A* routes around jams (cost term already present), and sustained congestion lowers adjacent land value and dings approval; a congestion overlay. Plus a final balance pass and robustness hardening: stress-test extreme slider settings, add guards/clamps so the sim never NaNs, stalls at zero, or explodes, and confirm sustained 60fps at full city with the maximum car fleet.
+Nothing -- v1 is complete.
 
 ## What Is Next
 
-- v1 complete after Phase F. Future ideas (pollution, disasters, isometric, larger maps) are in `docs/development/backlog.md`.
+Future ideas are tracked in `docs/development/backlog.md` (pollution/environment, disasters/events, isometric view, larger maps, granular services, history charts, and a late-game economy-tightening pass).
+
+## How To Run
+
+```bash
+cd /Volumes/1TB/GIT/Jason
+python3 -m http.server 8000     # or: npx serve
+# open http://localhost:8000
+```
 
 ## Key References
 

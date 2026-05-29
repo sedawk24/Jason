@@ -28,7 +28,7 @@ export function diffuseLandValue(city) {
   for (let i = 0; i < n; i++) {
     const t = g.type[i];
     let s = 0;
-    if (t === TileType.ROAD) s = B.LV_ROAD_SRC;
+    if (t === TileType.ROAD) s = B.LV_ROAD_SRC - B.LV_CONGEST_SRC * (g.traffic[i] / 255);
     else if (t === TileType.COMMERCIAL) s = B.LV_COM_SRC * (1 + g.density[i]);
     else if (t === TileType.RESIDENTIAL) s = B.LV_RES_SRC;
     else if (t === TileType.INDUSTRIAL) s = -B.LV_IND_SRC * (1 + g.density[i]);

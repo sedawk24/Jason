@@ -7,6 +7,7 @@ export class Car {
     this.progress = 0;   // float in [0, path.length - 1]
     this.speed = 0;      // tiles per real second
     this.color = '#fff';
+    this.lastCell = -1;  // last road cell credited with congestion
   }
 
   reset(path, speed, color) {
@@ -14,6 +15,7 @@ export class Car {
     this.progress = 0;
     this.speed = speed;
     this.color = color;
+    this.lastCell = -1;
   }
 
   get arrived() {

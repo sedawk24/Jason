@@ -17,6 +17,7 @@ export class TrafficSystem {
     this.roadTiles = [];   // all road tiles (fallback when few endpoints)
     this.pathfinder = new PathFinder(city.grid);
     this.targetFleet = B.MIN_CARS;
+    this.congestion = new Float32Array(city.grid.size); // real-time congestion intensity
     this.rebuildEndpoints();
   }
 
@@ -26,6 +27,8 @@ export class TrafficSystem {
     this.pool.length = 0;
     this.pathfinder.clearCache();
     this.targetFleet = B.MIN_CARS;
+    this.congestion.fill(0);
+    this.city.grid.traffic.fill(0);
     this.rebuildEndpoints();
   }
 
@@ -52,6 +55,9 @@ export class TrafficSystem {
       this.rebuildEndpoints();
       city.roadGraphDirty = false;
     }
+    // Periodically clear the path cache so cars reroute around current congestion.
+    if (city.tick % B.PATH_CACHE_REFRESH === 0) this.pathfinder.clearCache();
+
     const target = Math.round(city.stats.population * B.CARS_PER_CAPITA);
     this.targetFleet = Math.max(B.MIN_CARS, Math.min(B.MAX_CARS, target));
 
@@ -89,11 +95,35 @@ export class TrafficSystem {
   // Move cars in real time; when a car arrives, re-task it with a fresh trip or
   // retire it back to the pool if the fleet is over target.
   advance(dt) {
+    const cong = this.congestion;
+
+    // Decay congestion everywhere in real time, so it stays bounded at any sim
+    // speed (and keeps draining while paused).
+    const decay = B.CONGEST_DECAY * dt;
+    if (decay > 0) {
+      for (let i = 0; i < cong.length; i++) {
+        const v = cong[i];
+        if (v > 0) cong[i] = v > decay ? v - decay : 0;
+      }
+    }
+
     let pathBudget = B.MAX_PATHS_PER_FRAME;
     const cars = this.cars;
     for (let k = cars.length - 1; k >= 0; k--) {
       const car = cars[k];
       car.progress += car.speed * dt;
+
+      // Credit the cell the car occupies with congestion, once per cell entered.
+      const path = car.path;
+      if (path) {
+        const cell = path[Math.min(Math.floor(car.progress), path.length - 1)];
+        if (cell !== car.lastCell) {
+          const v = cong[cell] + B.CONGEST_ENTER;
+          cong[cell] = v > 255 ? 255 : v;
+          car.lastCell = cell;
+        }
+      }
+
       if (!car.arrived) continue;
 
       let newPath = null;
@@ -109,6 +139,10 @@ export class TrafficSystem {
         this.pool.push(car);
       }
     }
+
+    // Publish congestion to the grid (Uint8) for routing, land value, and overlay.
+    const tr = this.city.grid.traffic;
+    for (let i = 0; i < cong.length; i++) tr[i] = cong[i];
   }
 
   randomEndpoint() {

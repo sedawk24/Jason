@@ -17,6 +17,7 @@ Future features, ideas, and deferred work that surface during development. Items
 
 ## Improvements
 
+- **Tighten late-game economy.** A well-run city at the default 9% tax accrues a large surplus (money becomes a non-factor once big), though bad policy still bankrupts you. Consider scaling expenses more with city size or trimming tax income so budgets stay meaningful at scale. (Left as-is in v1 to avoid destabilizing the verified balance.)
 - Cache the static tile layer to an offscreen canvas; redraw only changed regions for large cities.
 - Configurable map size and tick length from the UI.
 - Sound/music and richer visual polish (day/night cycle, building sprites).

@@ -25,6 +25,10 @@ export function drawOverlay(ctx, camera, grid, mode) {
         if (t >= TileType.RESIDENTIAL && t <= TileType.INDUSTRIAL) {
           color = (grid.flags[i] & FLAG.POWERED) ? '#2ecc71' : '#e74c3c';
         }
+      } else if (mode === 'congestion') {
+        if (grid.type[i] === TileType.ROAD && grid.traffic[i] > 0) {
+          color = heat(grid.traffic[i] / 255);
+        }
       }
       if (!color) continue;
 

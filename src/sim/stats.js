@@ -8,12 +8,13 @@ export function computeStats(city) {
   const g = city.grid;
   let population = 0, jobsC = 0, jobsI = 0, roadTiles = 0;
   let police = 0, fire = 0, school = 0;
-  let lvSum = 0, lvCount = 0;
+  let lvSum = 0, lvCount = 0, trafficSum = 0;
 
   for (let i = 0; i < g.size; i++) {
     const t = g.type[i];
     if (t === TileType.ROAD) {
       roadTiles++;
+      trafficSum += g.traffic[i];
     } else if (t === TileType.POLICE) {
       police++;
     } else if (t === TileType.FIRE) {
@@ -44,6 +45,7 @@ export function computeStats(city) {
   s.fire = fire;
   s.school = school;
   s.avgLandValue01 = lvCount > 0 ? (lvSum / lvCount) / 255 : 0;
+  s.avgCongestion01 = roadTiles > 0 ? (trafficSum / roadTiles) / 255 : 0;
 
   const workforce = population * B.WORKFORCE_FRAC;
   const totalJobs = jobsC + jobsI;
@@ -57,6 +59,7 @@ export function computeStats(city) {
     - taxDispleasure
     - B.APPROVAL_UNEMP_PEN * s.unemployment
     - (s.bankrupt ? B.APPROVAL_DEFICIT_PEN : 0)
+    - B.APPROVAL_CONGEST_PEN * s.avgCongestion01
     + B.APPROVAL_SERVICE_BONUS * (s.coverage01 - 0.5);
   s.approval = Math.max(0, Math.min(100, approval));
 }

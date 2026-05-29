@@ -93,4 +93,11 @@ export const B = {
   CAR_SPEED_VAR: 0.5,
   MAX_PATHS_PER_FRAME: 8,
   PATH_CACHE_SIZE: 256,
+
+  // --- Traffic congestion ---
+  CONGEST_ENTER: 22,        // congestion added to a cell when a car enters it
+  CONGEST_DECAY: 14,        // congestion decay per real second
+  PATH_CACHE_REFRESH: 40,   // clear the path cache every N ticks so routes adapt to jams
+  LV_CONGEST_SRC: 30,       // busy roads reduce nearby land value
+  APPROVAL_CONGEST_PEN: 25, // approval penalty per unit of average congestion
 };
