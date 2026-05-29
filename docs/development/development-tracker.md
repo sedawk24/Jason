@@ -10,8 +10,8 @@ Detailed phase-by-phase development progress for the **Autonomous City Simulator
 |-------|------|--------|
 | 0 | Project setup & tracking | Complete |
 | A | Foundation (grid + camera + render loop) | Complete |
-| B | Dual-loop timing + seed roads + cars | In Progress |
-| C | Autonomous growth core (RCI + roads + zoning + dev) | Not Started |
+| B | Dual-loop timing + seed roads + cars | Complete |
+| C | Autonomous growth core (RCI + roads + zoning + dev) | In Progress |
 | D | Economy + utilities + density/decline | Not Started |
 | E | City services + approval + overlays + save/load | Not Started |
 | F | Traffic congestion + tuning hardening | Not Started |
@@ -69,7 +69,7 @@ Goal: a visible bare-land grid you can pan and zoom at ~60fps. Establishes the l
 
 ---
 
-## Phase B: Dual-loop timing + seed roads + cars (Not Started)
+## Phase B: Dual-loop timing + seed roads + cars (Complete)
 
 Goal: prove the timing model -- smooth 60fps cars on a separate, speed-controllable tick cadence.
 
@@ -77,21 +77,23 @@ Goal: prove the timing model -- smooth 60fps cars on a separate, speed-controlla
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | `src/model/City.js` skeleton (grid, tick, params, demand, economy, stats) | Not Started | |
-| 2 | Time accumulator + sim-speed handling in `main.js` | Not Started | |
-| 3 | `src/ui/TimeControls.js` (pause/slow/normal/fast + date readout) | Not Started | |
-| 4 | Seed road cross on new city | Not Started | |
-| 5 | `src/traffic/pathfind.js` (A* over road tiles + LRU cache) | Not Started | |
-| 6 | `src/traffic/Car.js` + `src/traffic/TrafficSystem.js` (pool, spawn, advance) | Not Started | |
-| 7 | `src/render/carLayer.js` (interpolated car positions) | Not Started | |
+| 1 | `src/model/City.js` skeleton (grid, tick, params, demand, economy, stats) | Complete | Full save-state shape; `createNew` + seed |
+| 2 | Time accumulator + sim-speed handling in `main.js` | Complete | dt clamp + MAX_TICKS_PER_FRAME backlog drop |
+| 3 | `src/ui/TimeControls.js` (pause/slow/normal/fast + date readout) | Complete | Year/Week date from tick |
+| 4 | Seed settlement (tic-tac-toe roads + buildings) on new city | Complete | 69 road tiles, 8 buildings, road frontier |
+| 5 | `src/traffic/pathfind.js` (A* over road tiles + LRU cache) | Complete | Binary heap; congestion-ready cost |
+| 6 | `src/traffic/Car.js` + `src/traffic/TrafficSystem.js` (pool, spawn, advance) | Complete | Object pool; re-task with retries |
+| 7 | `src/render/carLayer.js` (interpolated car positions) | Complete | Tile-space interpolation; zoom cull |
+| 8 | `src/sim/simulate.js` minimal tick + `src/config/balance.js` (seed) | Complete | Pipeline scaffold; tunables file started |
 
 ### Verification
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| Cars glide at 60fps | Pending | |
-| Speed changes tick rate, not car smoothness | Pending | |
-| Pause stops ticks; tab-switch does not fast-forward | Pending | |
+| Cars render on roads, glide at 60fps | Pass | Headless screenshot: 60fps, 12 cars on the road grid |
+| Pathfinding correct | Pass | Node test: all-road, orthogonally-contiguous routes |
+| Cars advance in real time, independent of sim ticks | Pass | Node test: motion via dt; smooth regardless of tick rate |
+| Pause stops ticks; cars keep moving; no fast-forward | Pass | Node test: clock frozen + fleet stable while paused; dt-clamp/backlog-drop in loop |
 
 ---
 
@@ -203,3 +205,4 @@ Goal: traffic that matters, plus balance and robustness.
 |------|-------|--------|
 | 2026-05-29 | 0 | Planning complete; tracking files populated; architecture & decisions recorded |
 | 2026-05-29 | A | Foundation built: HTML/CSS layout, typed-array grid + water generation, camera (pan/zoom/cull), tile palette, renderer, render loop + FPS. Verified in headless Chrome (62fps, land+water) and Node model smoke test. |
+| 2026-05-29 | B | Dual-loop timing (rAF render + tick accumulator), City save-state model + seed settlement, time/speed controls + date, A* pathfinding + LRU cache, pooled car system with real-time interpolation, car rendering. Verified via Node functional test (pathfinding, motion, pause) and headless screenshot (60fps, 12 cars). |

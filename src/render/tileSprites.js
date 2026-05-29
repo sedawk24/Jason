@@ -27,3 +27,6 @@ export function colorFor(type, density = 0) {
   if (zone) return zone[density] || zone[0];
   return FLAT[type] || '#ff00ff'; // magenta = unhandled type (should never show)
 }
+
+// Car body colors, assigned at spawn for visual variety.
+export const CAR_COLORS = ['#f5f5f5', '#ffd166', '#ef476f', '#06d6a0', '#4cc9f0', '#e07a5f', '#c0c5ce', '#8ecae6'];

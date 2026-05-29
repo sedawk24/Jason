@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../config/constants.js';
 import { colorFor } from './tileSprites.js';
+import { drawCars } from './carLayer.js';
 
 // Canvas orchestrator. Reads model state and draws it; never mutates the model.
 // draw() takes what it needs as arguments so the renderer stays decoupled from
@@ -28,9 +29,8 @@ export class Renderer {
     this.camera.setViewport(rect.width, rect.height);
   }
 
-  draw(grid /* , traffic, city */) {
+  draw(grid, traffic = null) {
     const ctx = this.ctx;
-    const cam = this.camera;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
 
     // Background (shows through where the map doesn't cover the viewport).
@@ -38,6 +38,7 @@ export class Renderer {
     ctx.fillRect(0, 0, this.cssW, this.cssH);
 
     this.drawTiles(grid);
+    if (traffic) drawCars(ctx, this.camera, grid, traffic);
   }
 
   drawTiles(grid) {
