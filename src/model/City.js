@@ -35,7 +35,8 @@ export class City {
       roadTiles: 0, powerPlants: 0, waterTowers: 0,
       police: 0, fire: 0, school: 0,
       powerCap: 0, powerDraw: 0, waterCap: 0, waterDraw: 0,
-      coverage01: 0, avgLandValue01: 0, avgCongestion01: 0,
+      coverage01: 0, covPolice01: 0, covFire01: 0, covEdu01: 0,
+      avgLandValue01: 0, avgCongestion01: 0,
       approval: 100, unemployment: 0, bankrupt: false,
     };
 
@@ -70,7 +71,8 @@ export class City {
     s.roadTiles = 0; s.powerPlants = 0; s.waterTowers = 0;
     s.police = 0; s.fire = 0; s.school = 0;
     s.powerCap = 0; s.powerDraw = 0; s.waterCap = 0; s.waterDraw = 0;
-    s.coverage01 = 0; s.avgLandValue01 = 0; s.avgCongestion01 = 0;
+    s.coverage01 = 0; s.covPolice01 = 0; s.covFire01 = 0; s.covEdu01 = 0;
+    s.avgLandValue01 = 0; s.avgCongestion01 = 0;
     s.approval = 100; s.unemployment = 0; s.bankrupt = false;
 
     this.roadGraphDirty = true;

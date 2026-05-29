@@ -18,7 +18,7 @@ Future features, ideas, and deferred work that surface during development. Items
 
 ## Improvements
 
-- **Distinct per-service roles.** Police/fire/education currently feed one pooled "coverage" value, so cutting one service is compensated by auto-building the others. Giving each a specific effect (e.g. police -> safety/land value, fire -> enables higher density, education -> commercial/industrial productivity) would make each slider individually meaningful.
+- **Rebalance jobs-to-population & approval baseline.** Commerce/industry over-build relative to residential (a built city can have ~1.5x more jobs than people), which also inflates congestion and drags approval. A *gentle, stable* worker-shortage damping on C/I demand (the naive two-sided version collapsed the city) plus an approval-baseline tuning pass would tighten this.
 
 - **Late-game economy balance pass.** The review-response capacity-gating fix (occupancy reserves utility capacity) substantially tightened growth and the economy -- the old runaway multi-million surplus is gone and a default-tax city now runs near break-even. Worth a fresh tuning pass to confirm both default and intentionally-bad policies feel right over a long game.
 - Cache the static tile layer to an offscreen canvas; redraw only changed regions for large cities.

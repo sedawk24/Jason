@@ -17,7 +17,10 @@ export class Grid {
     this.population = new Uint16Array(n);// residents on residential tiles
     this.jobs = new Uint16Array(n);      // jobs on commercial/industrial tiles
     this.flags = new Uint8Array(n);      // FLAG bitfield
-    this.coverage = new Uint8Array(n);   // 0..255 combined service coverage
+    this.covPolice = new Uint8Array(n);  // 0..255 police coverage
+    this.covFire = new Uint8Array(n);    // 0..255 fire coverage
+    this.covEdu = new Uint8Array(n);     // 0..255 education coverage
+    this.coverage = new Uint8Array(n);   // 0..255 combined (avg of the three) -- overlay/approval
     this.traffic = new Uint8Array(n);    // 0..255 congestion
   }
 
@@ -30,6 +33,9 @@ export class Grid {
     this.population.fill(0);
     this.jobs.fill(0);
     this.flags.fill(0);
+    this.covPolice.fill(0);
+    this.covFire.fill(0);
+    this.covEdu.fill(0);
     this.coverage.fill(0);
     this.traffic.fill(0);
   }

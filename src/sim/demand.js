@@ -21,8 +21,8 @@ export function updateDemand(city) {
   const workforce = Math.max(s.population * B.WORKFORCE_FRAC, 1);
   const totalJobs = s.jobsC + s.jobsI;
   const jobsPerWorker = totalJobs / workforce;
-  const jobSurplus = clamp(jobsPerWorker - 1, -1, 1);    // >0: jobs need workers
-  const workerSurplus = Math.max(clamp(1 - jobsPerWorker, -1, 1), 0); // >0: workers need jobs
+  const jobSurplus = clamp(jobsPerWorker - 1, -1, 1);    // >0: jobs need workers (draws residents)
+  const workerSurplus = Math.max(clamp(1 - jobsPerWorker, -1, 1), 0); // >0: spare workers for new C/I
 
   const popPressureC = clamp(s.population / B.C_POP_REF, 0, 1);
   const popPressureI = clamp(s.population / B.I_POP_REF, 0, 1);
@@ -32,9 +32,11 @@ export function updateDemand(city) {
   // bankruptcy) pushes demand down -- eventually negative, so the city shrinks.
   const approvalPush = B.APPROVAL_DEMAND * (s.approval / 100 - B.APPROVAL_NEUTRAL);
 
-  const targetR = B.R_BASE + B.R_JOBS * jobSurplus + B.R_SERVICE * s.coverage01 - taxPenalty(p.taxR) + approvalPush;
-  const targetC = B.C_BASE + B.C_POP * popPressureC + B.C_WORKERS * workerSurplus - taxPenalty(p.taxC) + approvalPush;
-  const targetI = B.I_BASE + B.I_POP * popPressureI + B.I_WORKERS * workerSurplus - taxPenalty(p.taxI) + approvalPush;
+  // Distinct service effects: police (safety) lifts residential demand;
+  // education (skilled workforce) lifts commercial & industrial demand.
+  const targetR = B.R_BASE + B.R_JOBS * jobSurplus + B.R_SERVICE * s.covPolice01 - taxPenalty(p.taxR) + approvalPush;
+  const targetC = B.C_BASE + B.C_POP * popPressureC + B.C_WORKERS * workerSurplus + B.EDU_CI * s.covEdu01 - taxPenalty(p.taxC) + approvalPush;
+  const targetI = B.I_BASE + B.I_POP * popPressureI + B.I_WORKERS * workerSurplus + B.EDU_CI * s.covEdu01 - taxPenalty(p.taxI) + approvalPush;
 
   const d = city.demand;
   d.R = lerp(d.R, clamp(targetR, -1, 1), B.DEMAND_SMOOTH);

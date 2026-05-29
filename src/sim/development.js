@@ -64,8 +64,19 @@ function developOne(city, i, t, spare) {
   }
   g.devLevel[i] = dev;
 
-  const cap = maxDensityForLV(lv01);
-  if (dev >= B.DEV_STEP_UP && density < cap && utilities) {
+  // Density is capped by land value AND fire coverage (HIGH needs fire). If a
+  // building now EXCEEDS its cap (land value fell, or fire coverage was cut), it
+  // sheds a level -- so cutting police (land value) or fire visibly de-densifies
+  // the existing skyline, not just future growth.
+  const fireCap = (g.covFire[i] / 255) >= B.FIRE_HIGH_REQ ? 3 : 2;
+  const cap = Math.min(maxDensityForLV(lv01), fireCap);
+
+  if (density > cap) {
+    g.density[i] = density - 1;
+    g.devLevel[i] = 60;
+    spare.power += B.powerPer[density] - B.powerPer[density - 1];
+    spare.water += B.waterPer[density] - B.waterPer[density - 1];
+  } else if (dev >= B.DEV_STEP_UP && density < cap && utilities) {
     // A new building level must reserve spare power + water capacity.
     const pReq = B.powerPer[density + 1] - B.powerPer[density];
     const wReq = B.waterPer[density + 1] - B.waterPer[density];

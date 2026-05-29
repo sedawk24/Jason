@@ -75,8 +75,12 @@ export const B = {
   COVERAGE_TARGET: 0.40,   // auto-build when avg coverage over population < this
   POLICE_COST: 1500, FIRE_COST: 1500, SCHOOL_COST: 2000,
   POLICE_MAINT: 40, FIRE_MAINT: 40, SCHOOL_MAINT: 55,
-  LV_COVERAGE: 45,         // coverage's contribution to land value (at full coverage)
-  R_SERVICE: 0.35,         // residential demand boost from service coverage
+  // Distinct per-service effects:
+  LV_POLICE: 40,           // police coverage -> nearby land value (safety)
+  LV_FIRE: 12,             // fire coverage -> nearby land value (minor)
+  FIRE_HIGH_REQ: 0.30,     // fire coverage (0..1) a tile needs to sustain HIGH density
+  R_SERVICE: 0.35,         // police (safety) coverage -> residential demand
+  EDU_CI: 0.30,            // education coverage -> commercial & industrial demand
 
   // --- Approval (the central "is the city well run?" signal; drives demand) ---
   // approval = BASE + SERVICE_BONUS*coverage - tax/unemployment/deficit/congestion
@@ -108,5 +112,5 @@ export const B = {
   CONGEST_PER_ACTIVITY: 0.08, // congestion per unit (population + jobs) of nearby activity
   ROAD_UNDERFUND_CONGEST: 1.0,// extra congestion multiplier as the roads budget -> 0
   LV_CONGEST_SRC: 26,         // busy roads reduce nearby land value
-  APPROVAL_CONGEST_PEN: 22,   // approval penalty per unit of average congestion
+  APPROVAL_CONGEST_PEN: 14,   // approval penalty per unit of average congestion
 };

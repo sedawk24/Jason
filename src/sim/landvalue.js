@@ -41,7 +41,9 @@ export function diffuseLandValue(city, force = false) {
   }
 
   for (let i = 0; i < n; i++) {
-    const v = B.LV_BASE + a[i] + centerField[i] + B.LV_COVERAGE * (g.coverage[i] / 255);
+    const v = B.LV_BASE + a[i] + centerField[i]
+      + B.LV_POLICE * (g.covPolice[i] / 255)
+      + B.LV_FIRE * (g.covFire[i] / 255);
     g.landValue[i] = v < 0 ? 0 : v > 255 ? 255 : v;
   }
 }

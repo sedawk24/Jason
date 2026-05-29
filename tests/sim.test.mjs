@@ -122,5 +122,28 @@ const maxLV = (c) => { let m = 0; for (let i = 0; i < c.grid.size; i++) if (c.gr
     `growth intact (pop ${G.stats.population}, density L/M/H ${c[1]}/${c[2]}/${c[3]})`);
 }
 
+// --- 8. Distinct per-service effects (police / fire / education) ---
+{
+  const after = (mut) => {
+    const c = City.createNew(7); computeStats(c);
+    for (let t = 0; t < 1000; t++) tick(c);
+    if (mut) mut(c);
+    for (let t = 0; t < 500; t++) tick(c);
+    let hi = 0;
+    for (let i = 0; i < c.grid.size; i++) {
+      const t = c.grid.type[i];
+      if (t >= TileType.RESIDENTIAL && t <= TileType.INDUSTRIAL && c.grid.density[i] === 3) hi++;
+    }
+    return { hi, R: c.demand.R, C: c.demand.C, I: c.demand.I };
+  };
+  const ctl = after(null);
+  const noFire = after((c) => { c.params.budgetFire = 0; });
+  const noEdu = after((c) => { c.params.budgetEdu = 0; });
+  const noPolice = after((c) => { c.params.budgetPolice = 0; });
+  ok(noFire.hi < ctl.hi * 0.5, `fire gates high density (highrises ${ctl.hi} -> ${noFire.hi})`);
+  ok(noEdu.C < ctl.C - 0.05 && noEdu.I < ctl.I - 0.05, `education drives C/I demand (C ${ctl.C.toFixed(2)} -> ${noEdu.C.toFixed(2)})`);
+  ok(noPolice.R < ctl.R - 0.05, `police drives residential demand (R ${ctl.R.toFixed(2)} -> ${noPolice.R.toFixed(2)})`);
+}
+
 console.log('\n' + (fail === 0 ? 'ALL PASS' : fail + ' FAILURE(S)'));
 process.exit(fail === 0 ? 0 : 1);

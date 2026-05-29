@@ -1,56 +1,78 @@
 import { B } from '../config/balance.js';
 import { TileType } from '../config/constants.js';
 
-// City services: police, fire, education. The engine auto-builds them where
-// they're needed. Each service building radiates coverage over a radius (strength
-// scaled by its funding slider); the three types sum into one combined coverage
-// field. Coverage raises land value, lifts residential demand, and improves
-// approval -- so under-funding shrinks coverage and the city suffers.
+// City services with DISTINCT roles, each on its own coverage layer:
+//   Police    -> safety: raises nearby land value + residential demand
+//   Fire      -> required to sustain HIGH-density buildings
+//   Education -> raises commercial & industrial demand (skilled workforce)
+// All three also contribute to combined coverage, which feeds approval.
 //
-// The coverage KPI is weighted by building occupancy (population + jobs), so a
-// dense underserved district matters far more than an empty zoned tile.
+// Because each service has its own layer, cutting one has a specific consequence
+// that the others cannot mask. The engine only auto-builds a *funded* service
+// whose own coverage is below target, so it never compensates for a defunded one.
 //
-// `force` recomputes regardless of the interval (used on load); `allowBuild`
-// can be set false to recompute coverage without auto-building (rehydration).
+// `force` recomputes regardless of interval (load); `allowBuild` false skips
+// auto-building (rehydration).
 export function updateServices(city, force = false, allowBuild = true) {
   if (!force && city.tick > 1 && city.tick % B.SERVICE_INTERVAL !== 0) return;
 
   const g = city.grid, n = g.size, p = city.params;
 
-  let police = 0, fire = 0, school = 0;
-  for (let i = 0; i < n; i++) {
-    const t = g.type[i];
-    if (t === TileType.POLICE) police++;
-    else if (t === TileType.FIRE) fire++;
-    else if (t === TileType.SCHOOL) school++;
-  }
+  g.covPolice.fill(0);
+  g.covFire.fill(0);
+  g.covEdu.fill(0);
+  stamp(g, g.covPolice, TileType.POLICE, p.budgetPolice);
+  stamp(g, g.covFire, TileType.FIRE, p.budgetFire);
+  stamp(g, g.covEdu, TileType.SCHOOL, p.budgetEdu);
 
-  g.coverage.fill(0);
-  stamp(g, TileType.POLICE, p.budgetPolice);
-  stamp(g, TileType.FIRE, p.budgetFire);
-  stamp(g, TileType.SCHOOL, p.budgetEdu);
-
-  // Average coverage weighted by occupancy (population + jobs).
-  let weighted = 0, totalW = 0;
+  // Combined coverage (overlay + approval) and occupancy-weighted per-type averages.
+  let wP = 0, wF = 0, wE = 0, wC = 0, totalW = 0;
   for (let i = 0; i < n; i++) {
+    const cp = g.covPolice[i], cf = g.covFire[i], ce = g.covEdu[i];
+    const combined = (cp + cf + ce) / 3;
+    g.coverage[i] = combined;
     const t = g.type[i];
     if (t < TileType.RESIDENTIAL || t > TileType.INDUSTRIAL) continue;
     const w = g.population[i] + g.jobs[i];
     if (w <= 0) continue;
-    weighted += g.coverage[i] * w;
-    totalW += w;
+    wP += cp * w; wF += cf * w; wE += ce * w; wC += combined * w; totalW += w;
   }
-  city.stats.coverage01 = totalW > 0 ? (weighted / totalW) / 255 : 0;
+  const s = city.stats;
+  s.covPolice01 = totalW > 0 ? (wP / totalW) / 255 : 0;
+  s.covFire01 = totalW > 0 ? (wF / totalW) / 255 : 0;
+  s.covEdu01 = totalW > 0 ? (wE / totalW) / 255 : 0;
+  s.coverage01 = totalW > 0 ? (wC / totalW) / 255 : 0;
 
-  if (allowBuild &&
-      city.stats.population > 0 &&
-      city.stats.coverage01 < B.COVERAGE_TARGET &&
-      city.tick - city.lastServiceBuild >= B.SERVICE_COOLDOWN) {
-    buildService(city, police, fire, school);
+  if (allowBuild && s.population > 0 && city.tick - city.lastServiceBuild >= B.SERVICE_COOLDOWN) {
+    autoBuild(city);
   }
 }
 
-function stamp(g, type, funding) {
+function autoBuild(city) {
+  const s = city.stats, p = city.params, g = city.grid;
+  // Only funded services below target are candidates -- never build a defunded
+  // type (pointless) or over-build to compensate for one.
+  const candidates = [
+    { type: TileType.POLICE, cov: s.covPolice01, fund: p.budgetPolice, cost: B.POLICE_COST, arr: g.covPolice },
+    { type: TileType.FIRE, cov: s.covFire01, fund: p.budgetFire, cost: B.FIRE_COST, arr: g.covFire },
+    { type: TileType.SCHOOL, cov: s.covEdu01, fund: p.budgetEdu, cost: B.SCHOOL_COST, arr: g.covEdu },
+  ].filter((c) => c.fund > 0 && c.cov < B.COVERAGE_TARGET);
+  if (candidates.length === 0) return;
+
+  candidates.sort((a, b) => a.cov - b.cov); // most under-served first
+  const pick = candidates[0];
+  if (city.economy.treasury < pick.cost) return;
+
+  const site = findServiceSite(city, pick.arr);
+  if (site < 0) return;
+  g.type[site] = pick.type;
+  g.density[site] = 0;
+  g.flags[site] = 0;
+  city.economy.treasury -= pick.cost;
+  city.lastServiceBuild = city.tick;
+}
+
+function stamp(g, cov, type, funding) {
   if (funding <= 0) return;
   const r = B.SERVICE_RADIUS;
   const strength = B.SERVICE_STRENGTH * funding;
@@ -66,35 +88,15 @@ function stamp(g, type, funding) {
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > r) continue;
         const j = yy * g.width + xx;
-        const v = g.coverage[j] + strength * (1 - dist / r);
-        g.coverage[j] = v > 255 ? 255 : v;
+        const v = cov[j] + strength * (1 - dist / r);
+        cov[j] = v > 255 ? 255 : v;
       }
     }
   }
 }
 
-function buildService(city, police, fire, school) {
-  // The least-represented service is the most needed.
-  let type = TileType.POLICE, min = police;
-  if (fire < min) { min = fire; type = TileType.FIRE; }
-  if (school < min) { min = school; type = TileType.SCHOOL; }
-  const cost = type === TileType.POLICE ? B.POLICE_COST
-    : type === TileType.FIRE ? B.FIRE_COST
-    : B.SCHOOL_COST;
-  if (city.economy.treasury < cost) return;
-
-  const site = findServiceSite(city);
-  if (site < 0) return;
-  const g = city.grid;
-  g.type[site] = type;
-  g.density[site] = 0;
-  g.flags[site] = 0;
-  city.economy.treasury -= cost;
-  city.lastServiceBuild = city.tick;
-}
-
-// Road-adjacent empty land where the most people/jobs have the least coverage.
-function findServiceSite(city) {
+// Road-adjacent empty land near people, with the least coverage of THIS service.
+function findServiceSite(city, covArr) {
   const g = city.grid;
   let best = -1, bestScore = Infinity;
   for (let i = 0; i < g.size; i++) {
@@ -105,7 +107,7 @@ function findServiceSite(city) {
     if (!roadAdj) continue;
     g.forEachMoore(x, y, (nx, ny, ni) => { activity += g.population[ni] + g.jobs[ni]; });
     if (activity === 0) continue;
-    const score = g.coverage[i] - activity * 0.4; // low coverage + high activity wins
+    const score = covArr[i] - activity * 0.4;
     if (score < bestScore) { bestScore = score; best = i; }
   }
   return best;

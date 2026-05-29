@@ -129,4 +129,12 @@ Following an external code review (`docs/review/codex-review-2026-05-29.md`), se
 
 **Reasoning:** The budget/service sliders previously had only weak, slow effects and approval was a passive readout, so cutting budgets felt consequence-free (you just accrued money). Routing policy through a visible approval gauge that drives growth makes every lever legible: over-tax, under-fund services, or let congestion build, and approval drops and growth slows/stalls.
 
-**Known limitation:** the three service budgets feed one pooled coverage value, so the engine compensates for cutting a single service by auto-building more of the others -- individual service sliders are therefore weak. Distinct per-service roles (police/fire/education each doing something specific) are a candidate next step (see backlog).
+**Known limitation (resolved below):** the three service budgets fed one pooled coverage value, so the engine compensated for cutting a single service by auto-building more of the others.
+
+## 2026-05-29 -- Distinct per-service roles (police / fire / education)
+
+**Decision:** Each service gets its own coverage layer and a distinct effect: **police** coverage raises nearby land value and residential demand; **fire** coverage is required to sustain HIGH-density buildings (and existing high-rises shed a level if it's cut); **education** coverage raises commercial & industrial demand. All three still sum into the combined coverage that feeds approval. Auto-build only funds a service whose *own* coverage is below target (it never compensates for a defunded one), and a building sheds a density level whenever it exceeds its current land-value/fire cap.
+
+**Reasoning:** With one pooled coverage value the three sliders were interchangeable -- cutting one was masked by the engine building more of the others. Distinct layers + effects make each budget individually meaningful and legible. Verified in tests: cutting fire drops high-rises to ~0, cutting education drops C/I demand, cutting police drops residential demand and de-densifies via land value.
+
+**Alternatives considered:** one combined "Services" slider (simpler but less depth) -- rejected per user preference for distinct roles.
