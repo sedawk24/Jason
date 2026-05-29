@@ -1,28 +1,26 @@
 import { B } from '../config/balance.js';
-import { TileType, WIDTH, HEIGHT } from '../config/constants.js';
+import { TileType } from '../config/constants.js';
 
 // Land value field (0..255). Drivers: a smooth downtown premium (peaks at the
-// city center), accessibility from roads, commercial amenity, waterfront, minus
-// industrial nuisance -- all spread by a few blur passes. Land value caps building
-// density (high-rises only downtown) and feeds the development growth score.
+// city center), accessibility from roads, commercial amenity, waterfront, plus
+// service coverage, minus industrial nuisance and road congestion -- spread by a
+// few blur passes. Land value caps building density (high-rises only downtown)
+// and feeds the development growth score.
 //
-// Recomputed every LV_INTERVAL ticks; it changes slowly. Scratch buffers and the
-// static center premium are allocated once and reused.
-
-const OX = (WIDTH / 2) | 0;
-const OY = (HEIGHT / 2) | 0;
-const MAXD = Math.hypot(OX, OY);
+// Recomputed every LV_INTERVAL ticks (it changes slowly); pass force=true to
+// refresh immediately (used on load). Scratch buffers and the static center
+// premium are allocated once and reused, keyed by grid size.
 
 let srcA = null, srcB = null, centerField = null;
 
-export function diffuseLandValue(city) {
-  if (city.tick > 1 && city.tick % B.LV_INTERVAL !== 0) return;
+export function diffuseLandValue(city, force = false) {
+  if (!force && city.tick > 1 && city.tick % B.LV_INTERVAL !== 0) return;
 
   const g = city.grid, n = g.size, w = g.width, h = g.height;
   if (!srcA || srcA.length !== n) {
     srcA = new Float32Array(n);
     srcB = new Float32Array(n);
-    centerField = buildCenterField(n, w, h);
+    centerField = buildCenterField(w, h);
   }
 
   for (let i = 0; i < n; i++) {
@@ -48,11 +46,13 @@ export function diffuseLandValue(city) {
   }
 }
 
-function buildCenterField(n, w, h) {
-  const f = new Float32Array(n);
+function buildCenterField(w, h) {
+  const ox = (w / 2) | 0, oy = (h / 2) | 0;
+  const maxd = Math.hypot(ox, oy);
+  const f = new Float32Array(w * h);
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      f[y * w + x] = B.LV_CENTER * (1 - Math.min(1, Math.hypot(x - OX, y - OY) / MAXD));
+      f[y * w + x] = B.LV_CENTER * (1 - Math.min(1, Math.hypot(x - ox, y - oy) / maxd));
     }
   }
   return f;

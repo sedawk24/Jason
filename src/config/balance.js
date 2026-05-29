@@ -84,7 +84,7 @@ export const B = {
   APPROVAL_DEFICIT_PEN: 25,// penalty while bankrupt
   APPROVAL_SERVICE_BONUS: 30, // bonus per unit of (coverage - 0.5)
 
-  // --- Traffic / cars ---
+  // --- Traffic / cars (visual layer) ---
   CARS_PER_CAPITA: 0.02,
   MIN_CARS: 12,
   MAX_CARS: 300,
@@ -93,11 +93,14 @@ export const B = {
   CAR_SPEED_VAR: 0.5,
   MAX_PATHS_PER_FRAME: 8,
   PATH_CACHE_SIZE: 256,
+  PATH_CACHE_REFRESH: 40,    // clear path cache every N ticks so routes adapt to congestion
+  ENDPOINT_REBUILD: 20,      // rebuild car endpoints every N ticks (catch zoning/build changes)
 
-  // --- Traffic congestion ---
-  CONGEST_ENTER: 22,        // congestion added to a cell when a car enters it
-  CONGEST_DECAY: 14,        // congestion decay per real second
-  PATH_CACHE_REFRESH: 40,   // clear the path cache every N ticks so routes adapt to jams
-  LV_CONGEST_SRC: 30,       // busy roads reduce nearby land value
-  APPROVAL_CONGEST_PEN: 25, // approval penalty per unit of average congestion
+  // --- Traffic congestion (deterministic, tick-time; derived from local activity) ---
+  CONGEST_INTERVAL: 3,        // recompute congestion every N ticks
+  CONGEST_RADIUS: 2,          // neighborhood radius of building activity feeding a road
+  CONGEST_PER_ACTIVITY: 0.08, // congestion per unit (population + jobs) of nearby activity
+  ROAD_UNDERFUND_CONGEST: 1.0,// extra congestion multiplier as the roads budget -> 0
+  LV_CONGEST_SRC: 26,         // busy roads reduce nearby land value
+  APPROVAL_CONGEST_PEN: 22,   // approval penalty per unit of average congestion
 };

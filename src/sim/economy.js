@@ -1,11 +1,10 @@
 import { B } from '../config/balance.js';
 
-// Treasury: tax income from population and jobs, minus infrastructure
-// maintenance (scaled by the budget sliders). A negative treasury is bankruptcy,
-// which gates utility/service auto-build elsewhere -- so neglect stalls
-// infrastructure and the city declines until the player fixes taxes or budgets.
-export function runEconomy(city) {
-  const s = city.stats, p = city.params, e = city.economy;
+// Tax income from population and jobs, minus infrastructure/service maintenance
+// (each scaled by its budget slider). Split out so the readout can be computed
+// without applying it (used during load rehydration).
+export function computeEconomyFlows(city) {
+  const s = city.stats, p = city.params;
 
   const income =
     s.population * B.TAX_BASE_R * p.taxR +
@@ -18,6 +17,16 @@ export function runEconomy(city) {
     s.police * B.POLICE_MAINT * p.budgetPolice +
     s.fire * B.FIRE_MAINT * p.budgetFire +
     s.school * B.SCHOOL_MAINT * p.budgetEdu;
+
+  return { income, expenses };
+}
+
+// Apply one tick of the economy. A negative treasury is bankruptcy, which gates
+// utility/service auto-build elsewhere -- so neglect stalls infrastructure and
+// the city declines until the player fixes taxes or budgets.
+export function runEconomy(city) {
+  const e = city.economy, s = city.stats;
+  const { income, expenses } = computeEconomyFlows(city);
 
   e.lastIncome = income;
   e.lastExpenses = expenses;

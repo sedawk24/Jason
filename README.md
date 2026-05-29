@@ -26,6 +26,16 @@ Press play, optionally adjust the speed, and watch the city grow. Use the slider
 - **Overlays:** toggle data heatmaps (land value, power, service coverage, congestion).
 - **Save / Load / New City:** persists to the browser's `localStorage`.
 
+## Tests
+
+The simulation/model layer is DOM-free, so it can be exercised headlessly:
+
+```bash
+node tests/sim.test.mjs
+```
+
+This regression suite covers save/load continuation determinism, load rehydration, traffic/sim RNG isolation, the zero-utilities and zero-roads-budget consequences, population-weighted service coverage, and that growth still forms a density pyramid.
+
 ## Documentation
 
 | File | Purpose |

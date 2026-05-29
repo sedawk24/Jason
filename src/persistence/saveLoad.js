@@ -1,8 +1,9 @@
 // Save/load the city to localStorage. We persist the authored grid layers
-// (type, density, devLevel) as base64 plus the scalar state; derived fields
-// (land value, coverage, utility flags, per-tile population/jobs) are recomputed
-// after load by the simulation. Typed-array buffers go to base64, not per-tile
-// JSON, to stay well under the localStorage size limit (~150KB here).
+// (type, density, devLevel) as base64, the scalar state, and the simulation RNG
+// state (so continuation after load is deterministic). Derived fields (land
+// value, coverage, congestion, utility flags, per-tile population/jobs) are
+// recomputed by simulate.rehydrate() after load. Typed-array buffers go to
+// base64, not per-tile JSON, to stay well under the localStorage size limit.
 const KEY = 'citysim.save.v1';
 
 export function hasSave() {
@@ -16,6 +17,7 @@ export function save(city) {
       v: 1,
       seed: city.seed,
       tick: city.tick,
+      rngState: city.rng.getState(),
       params: { ...city.params },
       demand: { ...city.demand },
       treasury: city.economy.treasury,
@@ -23,6 +25,8 @@ export function save(city) {
       lastPowerBuild: city.lastPowerBuild,
       lastWaterBuild: city.lastWaterBuild,
       lastServiceBuild: city.lastServiceBuild,
+      width: g.width,
+      height: g.height,
       type: u8ToB64(g.type),
       density: u8ToB64(g.density),
       devLevel: u8ToB64(g.devLevel),
@@ -36,14 +40,27 @@ export function save(city) {
 }
 
 // Mutates `city` in place (so existing references -- traffic, UI -- stay valid).
+// Validates the payload BEFORE touching live state, so a corrupt save can't leave
+// the city half-mutated. Caller should run simulate.rehydrate(city) afterwards.
 export function load(city) {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return false;
     const d = JSON.parse(raw);
+    if (d.v !== 1) { console.warn('save: unsupported version', d.v); return false; }
+
+    const g = city.grid;
+    const type = b64ToU8(d.type);
+    const density = b64ToU8(d.density);
+    const devLevel = b64ToU8(d.devLevel);
+    if (type.length !== g.size || density.length !== g.size || devLevel.length !== g.size) {
+      console.warn('save: grid size mismatch');
+      return false;
+    }
 
     city.seed = d.seed;
     city.tick = d.tick;
+    if (typeof d.rngState === 'number') city.rng.setState(d.rngState);
     Object.assign(city.params, d.params);
     Object.assign(city.demand, d.demand);
     city.economy.treasury = d.treasury;
@@ -53,13 +70,10 @@ export function load(city) {
     city.lastWaterBuild = d.lastWaterBuild ?? -999;
     city.lastServiceBuild = d.lastServiceBuild ?? -999;
 
-    const g = city.grid;
     g.clear();
-    g.type.set(b64ToU8(d.type));
-    g.density.set(b64ToU8(d.density));
-    g.devLevel.set(b64ToU8(d.devLevel));
-
-    city.refreshRoadFrontier();
+    g.type.set(type);
+    g.density.set(density);
+    g.devLevel.set(devLevel);
     city.roadGraphDirty = true;
     return true;
   } catch (e) {

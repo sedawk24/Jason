@@ -100,3 +100,25 @@ A running log of significant architectural decisions made during this project. E
 
 **Alternatives considered:**
 - Reordering the pipeline (zoning before utilities): workable but couples ordering to this quirk and complicates the Phase E services insertion point.
+
+## 2026-05-29 -- Review response: determinism, congestion ownership, occupancy gating
+
+Following an external code review (`docs/review/codex-review-2026-05-29.md`), several state-ownership and determinism issues were corrected.
+
+**Decision (RNG):** `mulberry32` exposes `getState()`/`setState()`; the simulation RNG state is saved and restored on load, and the visual traffic layer uses a SEPARATE RNG stream (`TrafficSystem.rng`).
+
+**Reasoning:** Previously only the initial seed was saved, so a loaded city matched at the instant of load but diverged on continuation; and frame-time car retasking consumed the sim RNG, making the simulation depend on frame timing. Separating the streams and persisting sim RNG state makes continuation deterministic (regression-tested).
+
+**Decision (congestion ownership):** Congestion is now deterministic, tick-time simulation state computed in `sim/congestion.js` from local building activity (population + jobs near each road), scaled by the roads budget. Cars are purely visual -- they read the grid, use their own RNG, and never write `grid.traffic`. This supersedes the Phase F car-driven congestion.
+
+**Reasoning:** Car-driven (frame-time) congestion fed land value/approval/routing -- i.e. presentation mutating the model and making the grid frame-timing-dependent. A tick-time field keeps the feature (congestion still affects the city) while restoring the model/presentation boundary and determinism.
+
+**Decision (load rehydration):** `simulate.rehydrate(city)` force-recomputes all derived fields (utility flags/caps, coverage, congestion, land value, stats, economy readouts) without auto-building or advancing the clock; saves are validated (version + array lengths) before mutating live state.
+
+**Reasoning:** Load previously restored only authored arrays and called `computeStats`, leaving land value/coverage/utility caps blank until enough ticks passed (and wrong indefinitely while paused).
+
+**Decision (occupancy gating):** A building density step-up reserves spare power AND water capacity from a per-tick pool.
+
+**Reasoning:** Density-0 zones draw zero utilities, so they were flagged powered/watered even at zero capacity and could become occupied with no real supply (e.g. utilities budget 0 still grew the city). Reserving capacity for new occupancy closes that.
+
+**Also:** roads budget scales road expansion + congestion (no longer upside-only); service coverage and placement are weighted by population+jobs (not tile count); fire stations use their own cost; map center/extent math reads grid dimensions; dead state removed; sliders get `aria-label`s; Save/Load expose status feedback; persistent regression tests added (`tests/sim.test.mjs`).

@@ -3,7 +3,7 @@ import { Camera } from './render/camera.js';
 import { Renderer } from './render/Renderer.js';
 import { TrafficSystem } from './traffic/TrafficSystem.js';
 import { TimeControls } from './ui/TimeControls.js';
-import { tick as simTick } from './sim/simulate.js';
+import { tick as simTick, rehydrate } from './sim/simulate.js';
 import { computeStats } from './sim/stats.js';
 import { StatBars } from './ui/StatBars.js';
 import { ControlPanel } from './ui/ControlPanel.js';
@@ -16,6 +16,7 @@ const camera = new Camera();
 const renderer = new Renderer(canvas, camera);
 
 const city = City.createNew(12345);
+camera.setWorldSize(city.grid.width, city.grid.height);
 computeStats(city); // initial stats so demand and fleet sizing see the seed town
 
 // Optional fast-forward for screenshots/debugging: ?ticks=N runs N sim ticks now.
@@ -53,22 +54,42 @@ overlaySelect.addEventListener('change', () => { overlayMode = overlaySelect.val
 const overlayParam = new URLSearchParams(location.search).get('overlay');
 if (overlayParam) { overlayMode = overlayParam; overlaySelect.value = overlayParam; }
 
-// --- Save / Load / New City ---
-document.getElementById('btn-save').addEventListener('click', () => { saveLoad.save(city); });
-document.getElementById('btn-load').addEventListener('click', () => {
-  if (saveLoad.load(city)) afterCityReplaced();
+// --- Save / Load / New City (with status feedback) ---
+const statusEl = document.getElementById('panel-status');
+let statusTimer = 0;
+function showStatus(msg) {
+  if (!statusEl) return;
+  statusEl.textContent = msg;
+  statusEl.classList.add('visible');
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => statusEl.classList.remove('visible'), 1800);
+}
+
+const loadBtn = document.getElementById('btn-load');
+function refreshLoadButton() { loadBtn.disabled = !saveLoad.hasSave(); }
+
+document.getElementById('btn-save').addEventListener('click', () => {
+  showStatus(saveLoad.save(city) ? 'Saved' : 'Save failed');
+  refreshLoadButton();
+});
+loadBtn.addEventListener('click', () => {
+  if (!saveLoad.hasSave()) { showStatus('No save found'); return; }
+  if (saveLoad.load(city)) { afterCityReplaced(); showStatus('Loaded'); }
+  else showStatus('Load failed');
 });
 document.getElementById('btn-new').addEventListener('click', () => {
   city.reset(Math.floor(Math.random() * 1e9));
   afterCityReplaced();
+  showStatus('New city');
 });
+refreshLoadButton();
 
 function afterCityReplaced() {
-  computeStats(city);
+  rehydrate(city);          // force-recompute all derived fields immediately
   traffic.reset();
   traffic.onTick(city);
   rebuildSidePanels();
-  userMovedCamera = false; // refit the camera to the new city
+  userMovedCamera = false;  // refit the camera to the new city
   camera.fitToView();
   lastAutosaveTick = city.tick;
 }

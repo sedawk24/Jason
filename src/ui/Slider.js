@@ -21,6 +21,7 @@ export class Slider {
     this.input = document.createElement('input');
     this.input.type = 'range';
     this.input.className = 'slider-input';
+    this.input.setAttribute('aria-label', label);
     this.input.min = min;
     this.input.max = max;
     this.input.step = step;

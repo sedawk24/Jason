@@ -37,11 +37,9 @@ export class City {
       powerCap: 0, powerDraw: 0, waterCap: 0, waterDraw: 0,
       coverage01: 0, avgLandValue01: 0, avgCongestion01: 0,
       approval: 100, unemployment: 0, bankrupt: false,
-      industrialOutput: 0, goodsConsumed: 0,
     };
 
     // Engine bookkeeping.
-    this.roadFrontier = new Set();
     this.roadGraphDirty = true;
     this.lastPowerBuild = -999;   // tick of last auto-built power plant (cooldown)
     this.lastWaterBuild = -999;   // tick of last auto-built water tower (cooldown)
@@ -75,7 +73,6 @@ export class City {
     s.coverage01 = 0; s.avgLandValue01 = 0; s.avgCongestion01 = 0;
     s.approval = 100; s.unemployment = 0; s.bankrupt = false;
 
-    this.roadFrontier.clear();
     this.roadGraphDirty = true;
     this.lastPowerBuild = -999;
     this.lastWaterBuild = -999;
@@ -122,8 +119,6 @@ export class City {
       [cx + 5, cy + 1, TileType.RESIDENTIAL],
     ];
     for (const [x, y, type] of seeds) this.setBuilding(x, y, type, Density.LOW);
-
-    this.refreshRoadFrontier();
   }
 
   setRoad(x, y) {
@@ -142,21 +137,5 @@ export class City {
     if (g.type[i] !== TileType.LAND) return; // only develop empty land
     g.type[i] = type;
     g.density[i] = density;
-  }
-
-  // Road tiles that have at least one buildable (LAND) orthogonal neighbor --
-  // the candidate set for autonomous road extension and zoning.
-  refreshRoadFrontier() {
-    const g = this.grid;
-    this.roadFrontier.clear();
-    for (let i = 0; i < g.size; i++) {
-      if (g.type[i] !== TileType.ROAD) continue;
-      const x = g.xOf(i), y = g.yOf(i);
-      let open = false;
-      g.forEachVonNeumann(x, y, (nx, ny, ni) => {
-        if (g.type[ni] === TileType.LAND) open = true;
-      });
-      if (open) this.roadFrontier.add(i);
-    }
   }
 }

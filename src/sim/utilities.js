@@ -7,7 +7,7 @@ import { TileType, FLAG } from '../config/constants.js';
 // on cheap road-adjacent land (on a cooldown so it doesn't carpet the map).
 // Buildings are flagged POWERED/WATERED up to available capacity; the rest go
 // dark and will decline (handled in development).
-export function updateUtilities(city) {
+export function updateUtilities(city, allowBuild = true) {
   const g = city.grid, n = g.size, p = city.params, e = city.economy;
 
   let plants = 0, towers = 0, powerDraw = 0, waterDraw = 0;
@@ -26,7 +26,7 @@ export function updateUtilities(city) {
   let waterCap = towers * B.WATER_OUTPUT * p.budgetUtil;
 
   // Auto-build on deficit (treasury-gated, cooldown-limited).
-  if (powerDraw > powerCap && e.treasury >= B.POWER_COST && city.tick - city.lastPowerBuild >= B.UTILITY_COOLDOWN) {
+  if (allowBuild && powerDraw > powerCap && e.treasury >= B.POWER_COST && city.tick - city.lastPowerBuild >= B.UTILITY_COOLDOWN) {
     const site = findUtilitySite(city);
     if (site >= 0) {
       placeUtility(g, site, TileType.POWER_PLANT);
@@ -36,7 +36,7 @@ export function updateUtilities(city) {
       powerCap = plants * B.POWER_OUTPUT * p.budgetUtil;
     }
   }
-  if (waterDraw > waterCap && e.treasury >= B.WATER_COST && city.tick - city.lastWaterBuild >= B.UTILITY_COOLDOWN) {
+  if (allowBuild && waterDraw > waterCap && e.treasury >= B.WATER_COST && city.tick - city.lastWaterBuild >= B.UTILITY_COOLDOWN) {
     const site = findUtilitySite(city);
     if (site >= 0) {
       placeUtility(g, site, TileType.WATER_TOWER);

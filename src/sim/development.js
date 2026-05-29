@@ -4,21 +4,25 @@ import { nearRoad } from './helpers.js';
 
 // Building development & decline. Each zoned tile accumulates "development level"
 // when its type's demand is positive and it has road access; crossing a threshold
-// steps density up (capped by land value, so high-rises only appear downtown, and
-// gated on power+water so a building only rises where utilities reach). An
-// occupied building that loses power/water, or any tile whose demand turns
-// negative or loses road access, decays; a fully-decayed empty tile is abandoned
-// back to land (available for rezoning).
-//
-// Note: power/water gate *occupied* buildings and the build-up step -- an empty
-// zoned tile (density 0) is never abandoned merely for lacking power, so it can
-// ramp up the tick after it is zoned (utilities flag it the following tick).
+// steps density up -- but only if there is spare power AND water capacity to serve
+// the new building level, which is reserved from a per-tick pool. This means a
+// city with no utility capacity (e.g. utilities budget 0) cannot grow new
+// occupancy. Density is also capped by land value (high-rises only downtown).
+// Missing utilities/access or negative demand decays a building; a fully-decayed
+// empty tile is abandoned back to land (and frees its capacity).
 export function developBuildings(city) {
   const g = city.grid;
+  const s = city.stats;
+  // Spare capacity available to grant new occupancy this tick (utilities ran
+  // earlier in the pipeline, so these reflect the current draw vs. capacity).
+  const spare = {
+    power: s.powerCap - s.powerDraw,
+    water: s.waterCap - s.waterDraw,
+  };
   for (let i = 0; i < g.size; i++) {
     const t = g.type[i];
     if (t < TileType.RESIDENTIAL || t > TileType.INDUSTRIAL) continue;
-    developOne(city, i, t);
+    developOne(city, i, t, spare);
   }
 }
 
@@ -28,7 +32,7 @@ function maxDensityForLV(lv01) {
   return 1;
 }
 
-function developOne(city, i, t) {
+function developOne(city, i, t, spare) {
   const g = city.grid;
   const density = g.density[i];
   const occupied = density >= 1;
@@ -62,13 +66,22 @@ function developOne(city, i, t) {
 
   const cap = maxDensityForLV(lv01);
   if (dev >= B.DEV_STEP_UP && density < cap && utilities) {
-    g.density[i] = density + 1;       // a new building level requires utilities
-    g.devLevel[i] = 40;              // hysteresis: next step takes time
+    // A new building level must reserve spare power + water capacity.
+    const pReq = B.powerPer[density + 1] - B.powerPer[density];
+    const wReq = B.waterPer[density + 1] - B.waterPer[density];
+    if (spare.power >= pReq && spare.water >= wReq) {
+      g.density[i] = density + 1;
+      g.devLevel[i] = 40; // hysteresis: next step takes time
+      spare.power -= pReq;
+      spare.water -= wReq;
+    }
   } else if (dev <= B.DEV_STEP_DOWN && density > 0) {
     g.density[i] = density - 1;
     g.devLevel[i] = 60;
+    spare.power += B.powerPer[density] - B.powerPer[density - 1]; // freed capacity
+    spare.water += B.waterPer[density] - B.waterPer[density - 1];
   } else if (dev <= B.DEV_STEP_DOWN && density === 0 && declining) {
-    abandon(g, i);                    // fully decayed and unwanted -> empty land
+    abandon(g, i); // fully decayed and unwanted -> empty land
   }
 }
 

@@ -18,7 +18,7 @@
         <span class="panel-title">Autonomous City Simulator</span>
         <div id="panel-actions">
           <label class="overlay-label">Overlay
-            <select id="overlay-select">
+            <select id="overlay-select" aria-label="Data overlay">
               <option value="none">None</option>
               <option value="landvalue">Land value</option>
               <option value="coverage">Services</option>
@@ -29,6 +29,7 @@
           <button id="btn-save" class="action-btn">Save</button>
           <button id="btn-load" class="action-btn">Load</button>
           <button id="btn-new" class="action-btn">New City</button>
+          <span id="panel-status" class="panel-status" role="status" aria-live="polite"></span>
         </div>
         <div id="time-section"></div>
       </header>

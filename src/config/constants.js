@@ -28,8 +28,6 @@ export const Density = Object.freeze({ EMPTY: 0, LOW: 1, MED: 2, HIGH: 3 });
 export const FLAG = Object.freeze({
   POWERED: 1,
   WATERED: 2,
-  ROAD_ADJ: 4,
-  ZONED_EMPTY: 8,
 });
 
 // --- Time ---

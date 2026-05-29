@@ -1,5 +1,5 @@
 import { B } from '../config/balance.js';
-import { TileType, FLAG } from '../config/constants.js';
+import { TileType } from '../config/constants.js';
 import { shuffleInPlace, nearRoad } from './helpers.js';
 
 // Autonomous zoning. On empty land adjacent to a road, designate R/C/I in
@@ -23,7 +23,7 @@ export function updateZoning(city) {
     if (type == null) continue;
     g.type[i] = type;
     g.density[i] = 0;            // zoned but undeveloped (pale color until it grows)
-    g.flags[i] |= FLAG.ZONED_EMPTY;
+    g.flags[i] = 0;
     budget--;
   }
 }

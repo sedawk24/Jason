@@ -1,13 +1,15 @@
 import { Car } from './Car.js';
 import { PathFinder } from './pathfind.js';
+import { mulberry32 } from '../model/rng.js';
 import { B } from '../config/balance.js';
 import { TileType } from '../config/constants.js';
 import { CAR_COLORS } from '../render/tileSprites.js';
 
-// Owns all car agents. Cars are visual in v1 (Phase F adds congestion coupling).
-// Car state lives here, separate from the saved City model. Two clocks drive it:
-//   onTick(city)  -- per simulation tick: reconcile fleet size, (re)spawn
-//   advance(dt)   -- per render frame in REAL time: move cars, re-task arrivals
+// Owns all car agents -- a PURELY VISUAL layer. Cars read the road grid to
+// pathfind and animate, but never mutate the model and use their OWN random
+// stream (not the simulation RNG), so frame-time car behavior cannot affect
+// simulation determinism. (Congestion that feeds the simulation is computed
+// deterministically in the tick pipeline; see sim/congestion.js.)
 export class TrafficSystem {
   constructor(city) {
     this.city = city;
@@ -16,8 +18,8 @@ export class TrafficSystem {
     this.endpoints = [];   // road tiles adjacent to a building (trip start/end)
     this.roadTiles = [];   // all road tiles (fallback when few endpoints)
     this.pathfinder = new PathFinder(city.grid);
+    this.rng = mulberry32((city.seed ^ 0x9e3779b9) >>> 0); // separate from sim RNG
     this.targetFleet = B.MIN_CARS;
-    this.congestion = new Float32Array(city.grid.size); // real-time congestion intensity
     this.rebuildEndpoints();
   }
 
@@ -27,12 +29,11 @@ export class TrafficSystem {
     this.pool.length = 0;
     this.pathfinder.clearCache();
     this.targetFleet = B.MIN_CARS;
-    this.congestion.fill(0);
-    this.city.grid.traffic.fill(0);
+    this.rng = mulberry32((this.city.seed ^ 0x9e3779b9) >>> 0);
     this.rebuildEndpoints();
   }
 
-  // Recompute spawn endpoints from the current grid. Called when roads change.
+  // Recompute spawn endpoints from the current grid.
   rebuildEndpoints() {
     const g = this.city.grid;
     this.endpoints.length = 0;
@@ -51,9 +52,14 @@ export class TrafficSystem {
   }
 
   onTick(city) {
+    // Rebuild endpoints when roads change, and periodically otherwise (zoning,
+    // development, utilities, and services also change which roads border
+    // buildings without setting roadGraphDirty).
     if (city.roadGraphDirty) {
       this.rebuildEndpoints();
       city.roadGraphDirty = false;
+    } else if (city.tick % B.ENDPOINT_REBUILD === 0) {
+      this.rebuildEndpoints();
     }
     // Periodically clear the path cache so cars reroute around current congestion.
     if (city.tick % B.PATH_CACHE_REFRESH === 0) this.pathfinder.clearCache();
@@ -61,7 +67,6 @@ export class TrafficSystem {
     const target = Math.round(city.stats.population * B.CARS_PER_CAPITA);
     this.targetFleet = Math.max(B.MIN_CARS, Math.min(B.MAX_CARS, target));
 
-    // Spawn toward the target, bounded per tick.
     let attempts = 0;
     while (this.cars.length < this.targetFleet && attempts < B.SPAWN_PER_TICK) {
       attempts++;
@@ -80,8 +85,7 @@ export class TrafficSystem {
     return true;
   }
 
-  // Find a route from `src` to a random different endpoint, retrying a few times
-  // so a same-src/dst pick or a momentarily unreachable target doesn't fail.
+  // Find a route from `src` to a random different endpoint, retrying a few times.
   tripFrom(src, tries = 4) {
     for (let t = 0; t < tries; t++) {
       const dst = this.randomEndpoint();
@@ -92,38 +96,14 @@ export class TrafficSystem {
     return null;
   }
 
-  // Move cars in real time; when a car arrives, re-task it with a fresh trip or
-  // retire it back to the pool if the fleet is over target.
+  // Move cars in real time; re-task on arrival or retire if over target. Reads
+  // only the grid (via pathfinding) -- never writes to the model.
   advance(dt) {
-    const cong = this.congestion;
-
-    // Decay congestion everywhere in real time, so it stays bounded at any sim
-    // speed (and keeps draining while paused).
-    const decay = B.CONGEST_DECAY * dt;
-    if (decay > 0) {
-      for (let i = 0; i < cong.length; i++) {
-        const v = cong[i];
-        if (v > 0) cong[i] = v > decay ? v - decay : 0;
-      }
-    }
-
     let pathBudget = B.MAX_PATHS_PER_FRAME;
     const cars = this.cars;
     for (let k = cars.length - 1; k >= 0; k--) {
       const car = cars[k];
       car.progress += car.speed * dt;
-
-      // Credit the cell the car occupies with congestion, once per cell entered.
-      const path = car.path;
-      if (path) {
-        const cell = path[Math.min(Math.floor(car.progress), path.length - 1)];
-        if (cell !== car.lastCell) {
-          const v = cong[cell] + B.CONGEST_ENTER;
-          cong[cell] = v > 255 ? 255 : v;
-          car.lastCell = cell;
-        }
-      }
-
       if (!car.arrived) continue;
 
       let newPath = null;
@@ -139,24 +119,20 @@ export class TrafficSystem {
         this.pool.push(car);
       }
     }
-
-    // Publish congestion to the grid (Uint8) for routing, land value, and overlay.
-    const tr = this.city.grid.traffic;
-    for (let i = 0; i < cong.length; i++) tr[i] = cong[i];
   }
 
   randomEndpoint() {
     const list = this.endpoints.length >= 2 ? this.endpoints : this.roadTiles;
     if (list.length === 0) return null;
-    return list[(this.city.rng() * list.length) | 0];
+    return list[(this.rng() * list.length) | 0];
   }
 
   randomSpeed() {
-    const v = 1 + (this.city.rng() * 2 - 1) * B.CAR_SPEED_VAR;
+    const v = 1 + (this.rng() * 2 - 1) * B.CAR_SPEED_VAR;
     return B.CAR_SPEED * v;
   }
 
   randomColor() {
-    return CAR_COLORS[(this.city.rng() * CAR_COLORS.length) | 0];
+    return CAR_COLORS[(this.rng() * CAR_COLORS.length) | 0];
   }
 }
